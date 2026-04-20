@@ -858,3 +858,25 @@ rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc/data/rul_ba
 #==========================================================================================================================
 # end of successful artifact run section
 #==========================================================================================================================
+
+#==========================================================================================================================
+# vendor
+#==========================================================================================================================
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/poetry.lock
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/DEEP_ENSEMBLE
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/FLIPOUT
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/LRT
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/MC_DROPOUT
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/RADIAL
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/DEEP_ENSEMBLE/000.json
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/FLIPOUT/000.json
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/LRT/000.json
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/MC_DROPOUT/000.json
+!rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/RADIAL/000.json
+
+#==========================================================================================================================
+# end of vendor section
+#==========================================================================================================================
