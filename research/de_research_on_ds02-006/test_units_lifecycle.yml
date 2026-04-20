@@ -1,0 +1,34 @@
+test_fleet_statistics:
+  unit_11:
+    avg_rows_per_cycle: 11245.677966101695
+    degradation_start_cycle: 1
+    flight_classes: [3]
+    total_cycles: 59
+    total_rows: 663495
+    min_rul_found: 0
+    max_rul_found: 58
+  unit_14:
+    avg_rows_per_cycle: 2062.8684210526317
+    degradation_start_cycle: 1
+    flight_classes: [1]
+    total_cycles: 76
+    total_rows: 156778
+    min_rul_found: 0
+    max_rul_found: 75
+  unit_15:
+    avg_rows_per_cycle: 6469.701492537313
+    degradation_start_cycle: 1
+    flight_classes: [2]
+    total_cycles: 67
+    total_rows: 433470
+    min_rul_found: 0
+    max_rul_found: 66
+
+de_analytical_insights:
+  mission_intensity_ratio:
+    unit_11_vs_14: "5.45x"
+    note: "Unit 11 (Class 3) has over 5 times more data points per cycle than Unit 14 (Class 1)."
+    inference: "Cycle-based RUL prediction needs to account for the 'density' of flight hours. A 'cycle' in Class 1 is significantly less stressful/long than a 'cycle' in Class 3."
+  initial_health_consistency:
+    status: "Consistent"
+    note: "Just like the Dev set, all Test units also start in a degraded state (degradation_start_cycle: 1)."

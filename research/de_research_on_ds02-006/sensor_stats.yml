@@ -1,0 +1,26 @@
+raw_sensor_statistics:
+  Nc:   {max: 8745.18710820823, mean: 8204.632178990147, min: 7366.10815549222, nan_count: 0, std: 184.0668278391792, zero_count: 0}
+  Nf:   {max: 2263.47705648014, mean: 2014.0985145929103, min: 1469.74226945651, nan_count: 0, std: 138.67676564005163, zero_count: 0}
+  P15:  {max: 16.918858649452602, mean: 10.821344528932324, min: 5.917595653051009, nan_count: 0, std: 2.1383682608282686, zero_count: 0}
+  P2:   {max: 12.2686191054534, mean: 8.240630776143853, min: 4.3731745570994, nan_count: 0, std: 1.7609656082336764, zero_count: 0}
+  P21:  {max: 17.1765062430991, mean: 10.986136577596252, min: 6.00771132289443, nan_count: 0, std: 2.170932244495705, zero_count: 0}
+  P24:  {max: 21.9849655189758, mean: 13.59425054692403, min: 6.9144239391906215, nan_count: 0, std: 2.6088308345271374, zero_count: 0}
+  P40:  {max: 378.155880903871, mean: 211.73866794260698, min: 82.093094754055, nan_count: 0, std: 44.39311403263704, zero_count: 0}
+  P50:  {max: 13.2100404744911, mean: 8.027028632043315, min: 4.12915302242214, nan_count: 0, std: 1.8940102510875503, zero_count: 0}
+  Ps30: {max: 372.48446029497, mean: 208.18203904607512, min: 80.3307563333677, nan_count: 0, std: 43.750495608264366, zero_count: 0}
+  T24:  {max: 616.796557222057, mean: 559.0582960180791, min: 484.19717075666495, nan_count: 0, std: 17.938423516686186, zero_count: 0}
+  T30:  {max: 1487.2748640560098, mean: 1319.3349980446744, min: 1068.82265906399, nan_count: 0, std: 55.494434142724955, zero_count: 0}
+  T48:  {max: 1912.81617804444, mean: 1642.638292031856, min: 944.500507167682, nan_count: 0, std: 98.5346732484078, zero_count: 0}
+  T50:  {max: 1284.41006195793, mean: 1105.8800605186325, min: 690.194761749064, nan_count: 0, std: 51.634404946961126, zero_count: 0}
+  Wf:   {max: 4.53943632867981, mean: 2.250405916826107, min: 0.327984183135641, nan_count: 0, std: 0.5664040734424141, zero_count: 0}
+
+de_analytical_insights:
+  data_hygiene:
+    nan_check: "Passed (0 NaNs found across all sensors)"
+    zero_check: "Passed (No stuck-at-zero sensors detected)"
+    status: "Production-Ready"
+  numerical_stabilization:
+    observation: "Sensors have vastly different orders of magnitude (e.g., T48 at ~1642 vs P2 at ~8.2)."
+    requirement: "Robust Z-score normalization or Min-Max scaling is MANDATORY before feeding into the neural network to avoid gradient dominance issues."
+  signal_distribution:
+    notable_spread: "T48 (Turbine Exit Temperature) shows the highest variance (std: 98.5346732484078), indicating it is a primary carrier of flight envelope and degradation information."

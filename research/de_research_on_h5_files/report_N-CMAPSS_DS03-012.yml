@@ -1,0 +1,194 @@
+de_insights:
+  fleet_stats:
+    total_rows: 9822837
+    total_units: 15
+    units_dev:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    units_test:
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+  flight_conditions:
+    Mach:
+      max: 0.749258995056152
+      mean: 0.5311577516951169
+      min: 0.000315000012051314
+    T2:
+      max: 534.3834162821589
+      mean: 491.70613871586255
+      min: 421.377893192244
+    TRA:
+      max: 87.6263275146484
+      mean: 59.82211943953067
+      min: 23.554519653320302
+    alt:
+      max: 35033.0
+      mean: 15091.414515559
+      min: 3001.0
+  hidden_data:
+    potential_metadata_cols: []
+  sensors:
+    auxiliary_data:
+    - unit
+    - cycle
+    - Fc
+    - hs
+    health_parameters:
+    - fan_eff_mod
+    - fan_flow_mod
+    - LPC_eff_mod
+    - LPC_flow_mod
+    - HPC_eff_mod
+    - HPC_flow_mod
+    - HPT_eff_mod
+    - HPT_flow_mod
+    - LPT_eff_mod
+    - LPT_flow_mod
+    operative_conditions:
+    - alt
+    - Mach
+    - TRA
+    - T2
+    physical_sensors:
+    - T24
+    - T30
+    - T48
+    - T50
+    - P15
+    - P2
+    - P21
+    - P24
+    - Ps30
+    - P40
+    - P50
+    - Nf
+    - Nc
+    - Wf
+    virtual_sensors:
+    - T40
+    - P30
+    - P45
+    - W21
+    - W22
+    - W25
+    - W31
+    - W32
+    - W48
+    - W50
+    - SmFan
+    - SmLPC
+    - SmHPC
+    - phi
+file_name: N-CMAPSS_DS03-012.h5
+file_size_gb: 3.44
+metadata:
+  root_attributes: {}
+structure:
+  A_dev:
+    compression: null
+    dtype: float64
+    shape:
+    - 5571277
+    - 4
+  A_test:
+    compression: null
+    dtype: float64
+    shape:
+    - 4251560
+    - 4
+  A_var:
+    compression: null
+    dtype: '|S5'
+    shape:
+    - 4
+  T_dev:
+    compression: null
+    dtype: float64
+    shape:
+    - 5571277
+    - 10
+  T_test:
+    compression: null
+    dtype: float64
+    shape:
+    - 4251560
+    - 10
+  T_var:
+    compression: null
+    dtype: '|S12'
+    shape:
+    - 10
+  W_dev:
+    compression: null
+    dtype: float64
+    shape:
+    - 5571277
+    - 4
+  W_test:
+    compression: null
+    dtype: float64
+    shape:
+    - 4251560
+    - 4
+  W_var:
+    compression: null
+    dtype: '|S4'
+    shape:
+    - 4
+  X_s_dev:
+    compression: null
+    dtype: float64
+    shape:
+    - 5571277
+    - 14
+  X_s_test:
+    compression: null
+    dtype: float64
+    shape:
+    - 4251560
+    - 14
+  X_s_var:
+    compression: null
+    dtype: '|S4'
+    shape:
+    - 14
+  X_v_dev:
+    compression: null
+    dtype: float64
+    shape:
+    - 5571277
+    - 14
+  X_v_test:
+    compression: null
+    dtype: float64
+    shape:
+    - 4251560
+    - 14
+  X_v_var:
+    compression: null
+    dtype: '|S5'
+    shape:
+    - 14
+  Y_dev:
+    compression: null
+    dtype: int64
+    shape:
+    - 5571277
+    - 1
+  Y_test:
+    compression: null
+    dtype: int64
+    shape:
+    - 4251560
+    - 1

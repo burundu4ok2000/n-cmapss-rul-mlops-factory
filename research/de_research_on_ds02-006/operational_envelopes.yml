@@ -1,0 +1,42 @@
+unit_operational_profiles:
+  unit_10:
+    Mach: {max: 0.7405650019645691, mean: 0.6223352637170906, min: 0.32274898886680603, std: 0.07898358339064684}
+    T2: {max: 509.87624361904295, mean: 475.07427774909246, min: 435.669589465231, std: 16.4183959569659}
+    TRA: {max: 86.65953826904301, mean: 68.34990112822699, min: 24.4334201812744, std: 14.7152996135291}
+    alt: {max: 33035.0, mean: 21843.348450894344, min: 10001.0, std: 6238.860801570974}
+  unit_16:
+    Mach: {max: 0.7366589903831479, mean: 0.6174511505112255, min: 0.258047997951508, std: 0.08193407921473643}
+    T2: {max: 509.873698365109, mean: 474.9887184971756, min: 421.377893192244, std: 17.1326052761666}
+    TRA: {max: 86.65953826904301, mean: 68.18075712388897, min: 24.4334201812744, std: 14.6275131467648}
+    alt: {max: 35033.0, mean: 21730.35485531723, min: 10001.0, std: 6486.708905199435}
+  unit_18:
+    Mach: {max: 0.749258995056152, mean: 0.6326919555878265, min: 0.258047997951508, std: 0.07749307043710309}
+    T2: {max: 510.8146208923671, mean: 473.5964390868327, min: 421.377893192244, std: 16.5721948883593}
+    TRA: {max: 87.4505462646484, mean: 69.3400902906381, min: 23.5545196533203, std: 14.1018345875452}
+    alt: {max: 35033.0, mean: 22519.501420762328, min: 10001.0, std: 6243.722942631695}
+  unit_2:
+    Mach: {max: 0.749258995056152, mean: 0.6236694007954059, min: 0.32274898886680603, std: 0.07681277240352916}
+    T2: {max: 510.8146208923671, mean: 474.934060013345, min: 421.377893192244, std: 17.0228878853971}
+    TRA: {max: 87.4505462646484, mean: 68.83210023113136, min: 24.4334201812744, std: 14.9304717962381}
+    alt: {max: 35033.0, mean: 21912.10931357265, min: 10001.0, std: 6325.856013338953}
+  unit_20:
+    Mach: {max: 0.741761982440948, mean: 0.6206272916550581, min: 0.258047997951508, std: 0.07973192366598211}
+    T2: {max: 510.292713823287, mean: 475.86638994876466, min: 421.377893192244, std: 16.1368647243671}
+    TRA: {max: 87.6263275146484, mean: 68.22750400287661, min: 24.6091995239258, std: 14.5996600985986}
+    alt: {max: 35033.0, mean: 21594.04800171839, min: 10001.0, std: 6133.970891961024}
+  unit_5:
+    Mach: {max: 0.74277001619339, mean: 0.6245096235439844, min: 0.325962007045746, std: 0.07964465277963576}
+    T2: {max: 509.57821747568, mean: 475.60394491967844, min: 441.687145955235, std: 16.2227778100328}
+    TRA: {max: 86.65953826904301, mean: 68.32059158992514, min: 23.5545196533203, std: 14.3292183008024}
+    alt: {max: 31027.0, mean: 21766.56801010238, min: 10001.0, std: 6270.736681566504}
+
+de_analytical_insights:
+  flight_envelope_characteristics:
+    min_altitude_threshold: 10001.0
+    note: "Data is filtered to include only flight phases above 10,000 ft. Take-off and landing phases are excluded from this dataset."
+    impact: "The model is strictly a 'Cruise/Climb' estimator. It cannot be used for ground-level diagnostics."
+  unit_behavioral_clusters:
+    outlier: "Unit 5"
+    observation: "Max altitude for Unit 5 is restricted to 31,027.0 ft (vs 35,033.0 ft for others)."
+    hypothesis: "Unit 5 likely represents a 'Regional/Short-Haul' mission profile where the aircraft does not reach the standard cruise ceiling of 35k ft."
+    feature_engineering_tip: "Creating a binary feature 'is_high_altitude_mission' based on alt > 32000 could help the model distinguish between these engine usages."

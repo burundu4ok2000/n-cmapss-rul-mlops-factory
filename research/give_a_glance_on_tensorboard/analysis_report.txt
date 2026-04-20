@@ -1,0 +1,33 @@
+--- Bayesian Telemetry Inspection (V12.2.13) ---
+Analyzing: research/give-a-glance-on-tensorboard/events.tfevents
+
+Available tags: mse/train, elbo/train, kl/train, likelihood/train, rmsce/train, sharp/train, elbo/val, mse/val, kl/val, likelihood/val, rmsce/val, sharp/val
+
+Last 5 steps for [mse/train]:
+  Step 1939:   123.4611
+  Step 1949:   117.2303
+  Step 1979:   126.9915
+  Step 1989:   122.5452
+  Step 1999:   128.0507
+
+Last 5 steps for [elbo/train]:
+  Step 1939:     0.0107
+  Step 1949:     0.0107
+  Step 1979:     0.0107
+  Step 1989:     0.0107
+  Step 1999:     0.0108
+
+Last 5 steps for [kl/train]:
+  Step 1939: 763313.0000
+  Step 1949: 763265.5000
+  Step 1979: 763122.4375
+  Step 1989: 763074.6875
+  Step 1999: 763026.8125
+
+Last 5 steps for [likelihood/train]:
+  Step 1939: -763313.0000
+  Step 1949: -763265.5000
+  Step 1979: -763122.4375
+  Step 1989: -763074.6875
+  Step 1999: -763026.8125
+

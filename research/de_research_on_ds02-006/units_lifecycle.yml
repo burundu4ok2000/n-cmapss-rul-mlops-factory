@@ -1,0 +1,48 @@
+unit_10:
+  degradation_start_cycle: 1
+  flight_classes:
+  - 3
+  max_cycle: 82
+  min_cycle: 1
+  total_cycles: 82
+  total_rows: 952711
+unit_16:
+  degradation_start_cycle: 1
+  flight_classes:
+  - 3
+  max_cycle: 63
+  min_cycle: 1
+  total_cycles: 63
+  total_rows: 765295
+unit_18:
+  degradation_start_cycle: 1
+  flight_classes:
+  - 3
+  max_cycle: 71
+  min_cycle: 1
+  total_cycles: 71
+  total_rows: 890719
+unit_2:
+  degradation_start_cycle: 1
+  flight_classes:
+  - 3
+  max_cycle: 75
+  min_cycle: 1
+  total_cycles: 75
+  total_rows: 853142
+unit_20:
+  degradation_start_cycle: 1
+  flight_classes:
+  - 3
+  max_cycle: 66
+  min_cycle: 1
+  total_cycles: 66
+  total_rows: 768160
+unit_5:
+  degradation_start_cycle: 1
+  flight_classes:
+  - 3
+  max_cycle: 89
+  min_cycle: 1
+  total_cycles: 89
+  total_rows: 1033420
