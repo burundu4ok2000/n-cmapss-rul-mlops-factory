@@ -1,0 +1,143 @@
+#!/bin/bash
+# ==============================================================================
+# EPHEMERAL HPC WORKER STARTUP ORCHESTRATOR (V12.0.6)
+# Project: N-CMAPSS RUL Agentic Factory
+#
+# Architectural Role:
+#   High-Performance Compute (HPC) lifecycle management for Bayesian training.
+#   Implements the 'Barrier Pattern' by ensuring data availability before 
+#   triggering parallel compute workers.
+#
+# Process Flow:
+#   1. Environment Provisioning (Docker & Hardware Isolation)
+#   2. Data Ingestion (Synchronous GCS Synchronization)
+#   3. Parallel Asset Generation (Parquet/LMDB Creation)
+#   4. HPC Training Execution (Bayesian Inference)
+#   5. Forensic Artifact Recovery & Resource Termination
+# ==============================================================================
+
+set -exo pipefail
+
+# --- 1. Infrastructure Provisioning ---
+echo "[INFO:Provisioning] Initializing runtime environment..."
+curl -fsSL https://get.docker.com | sh
+systemctl start docker
+systemctl enable docker
+
+# Contextual Environment Variables (Injected via Terraform)
+PROJECT_ID="${project_id}"
+BUCKET_NAME="${bucket_name}"
+REGION="${region}"
+REPO_ID="${repo_id}"
+FF_SOURCE="${fast_forward_source}"
+INSTANCE_NAME=$(curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/name | tr -d '\n\r')
+ZONE=$(curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/zone | awk -F/ '{print $NF}' | tr -d '\n\r')
+
+# Audit Trace Recovery: Extract Git metadata injected during dispatch.
+GIT_COMMIT_HASH=$(curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/git-commit-hash | tr -d '\n\r' || echo "unknown-audit-fail")
+RUN_ID=$(curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/run-id | tr -d '\n\r' || echo "unknown-run-id")
+
+# Lifecycle Management: Handle cleanup, forensic recovery, and instance termination.
+function terminate_workflow() {
+  echo "[INFO:Lifecycle] Initiating resource termination for $INSTANCE_NAME in $ZONE..."
+  
+  # FORENSIC ARTIFACT RECOVERY: Synchronize any local logs or results that 
+  # survived the execution run to a Quarantine buffer.
+  if [ -d "$STAGING_DIR/results" ]; then
+    echo "[INFO:Forensics] Recovering artifacts to gs://$BUCKET_NAME/quarantine/runs/$RUN_ID/..."
+    # Capture specific failure if sync fails to serial console.
+    # We remove '|| true' to explicitly check the exit status for logging.
+    if ! gcloud storage cp -r "$STAGING_DIR/results/*" "gs://$BUCKET_NAME/quarantine/runs/$RUN_ID/"; then
+        echo "[ERROR:Forensics] FAILED to sync artifacts to GCS. Local data may be lost on instance deletion." > /dev/ttyS0
+    fi
+  fi
+
+  # Automated Resource Decommissioning
+  # Delayed execution to ensure telemetry propagation to Cloud Logging.
+  echo "[INFO:Lifecycle] Scheduled instance deletion in 15 seconds..."
+  
+  # BINGO #30: Robust Self-Termination
+  # We use a subshell that checks its own success and logs to serial if it fails.
+  # This prevents 'Zombie' instances if the IAM permissions are missing.
+  nohup bash -c "
+    sleep 15
+    if ! gcloud compute instances delete '$INSTANCE_NAME' --zone='$ZONE' --quiet; then
+        echo '[CRITICAL:Lifecycle] SELF-TERMINATION FAILED. IAM permissions (compute.instances.delete) may be missing.' > /dev/ttyS0
+    fi
+  " > /dev/null 2>&1 &
+  exit 0
+}
+
+# --- 2. Identity & Access Orchestration ---
+echo "[INFO:Security] Configuring Artifact Registry authentication..."
+gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+
+# --- 3. Data Provisioning & Worker Execution ---
+# Current implementation targets the cloud-trainer component.
+IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_ID/cloud-trainer:latest"
+STAGING_DIR="/tmp/data"
+
+echo "[INFO:Provisioning] Ensuring container image availability..."
+docker pull "$IMAGE"
+mkdir -p "$STAGING_DIR/ncmapss" "$STAGING_DIR/results"
+
+echo "[INFO:Ingestion] Phase 1: Data Fueling - Synchronizing raw telemetry..."
+# THE BARRIER: Infrastructure layer ensures data is available locally for the workers.
+gcloud storage cp "gs://$BUCKET_NAME/raw/*.h5" "$STAGING_DIR/ncmapss/"
+
+if [ -n "$FF_SOURCE" ]; then
+  echo "[INFO:Security] Fast-Forward Mode Active: Recycling artifacts from $FF_SOURCE..."
+  # Align paths: Download directly into the session buffer
+  mkdir -p "$STAGING_DIR/results/runs/$RUN_ID"
+  gcloud storage cp -r "gs://$BUCKET_NAME/results/runs/$FF_SOURCE/parquet" "$STAGING_DIR/results/runs/$RUN_ID/" || echo "[WARNING:FF] No Parquet found in $FF_SOURCE"
+  gcloud storage cp -r "gs://$BUCKET_NAME/results/runs/$FF_SOURCE/lmdb" "$STAGING_DIR/results/runs/$RUN_ID/" || echo "[WARNING:FF] No LMDB found in $FF_SOURCE"
+fi
+
+# Critical: Sync ownership to the 'trainer' (UID 1000) inside the container.
+chown -R 1000:1000 "$STAGING_DIR"
+
+echo "[INFO:Orchestration] Phase 2: Preprocessing - Generating serialized assets..."
+if ! docker run --rm \
+    --user 1000:1000 \
+    --shm-size=16g \
+    -v "$STAGING_DIR:/app/data" \
+    -v "$STAGING_DIR/results:/app/results" \
+    -e GCP_PROJECT_ID="$PROJECT_ID" \
+    -e GIT_COMMIT_HASH="$GIT_COMMIT_HASH" \
+    -e RUN_ID="$RUN_ID" \
+    -e FAST_FORWARD_SOURCE="$FF_SOURCE" \
+    -e ENVIRONMENT="production" \
+    "$IMAGE" \
+    ncmapss.generate_files 2>&1 | tee /dev/ttyS0; then
+    
+    echo "[INFO:Orchestration] ERROR: Preprocessing failure detected."
+    journalctl -u google-startup-scripts.service -n 500 > /tmp/preproc_failure.log
+    gcloud storage cp /tmp/preproc_failure.log "gs://$BUCKET_NAME/logs/$INSTANCE_NAME/PREPROC_FAILED_$(date +%s).log"
+    terminate_workflow
+fi
+
+echo "[INFO:Orchestration] Phase 3: Training - Executing Bayesian Engine (CPU-Large Scale)..."
+if ! docker run --rm \
+    --user 1000:1000 \
+    --shm-size=16g \
+    -v "$STAGING_DIR:/app/data" \
+    -v "$STAGING_DIR/results:/app/results" \
+    -e GCP_PROJECT_ID="$PROJECT_ID" \
+    -e GIT_COMMIT_HASH="$GIT_COMMIT_HASH" \
+    -e RUN_ID="$RUN_ID" \
+    -e FAST_FORWARD_SOURCE="$FF_SOURCE" \
+    -e ENVIRONMENT="production" \
+    "$IMAGE" \
+    ncmapss.train_model --bayesian --archi bigception --lr 0.001 --GPU -1 --model-name "$RUN_ID" 2>&1 | tee /dev/ttyS0; then
+  
+  echo "[INFO:Orchestration] ERROR: Training container exit with non-zero status."
+  journalctl -u google-startup-scripts.service -n 500 > /tmp/train_failure.log
+  gcloud storage cp /tmp/train_failure.log "gs://$BUCKET_NAME/logs/$INSTANCE_NAME/TRAIN_FAILED_$(date +%s).log"
+else
+  echo "[INFO:Performance] SUCCESS: Training cycle concluded successfully."
+  echo "SUCCESS" > /tmp/success.log
+  gcloud storage cp /tmp/success.log "gs://$BUCKET_NAME/logs/$INSTANCE_NAME/TRAINING_SUCCESS.log"
+fi
+
+# Final Resource Release
+terminate_workflow
