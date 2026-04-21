@@ -1,0 +1,38 @@
+# ==============================================================================
+# CLOUD TRAINER BUILD CONTEXT MANIFEST (V12.0.5)
+# Strategy: Surgical "Deny All" Security Pattern
+#
+# Rationale:
+#   To ensure minimal attack surface and optimal build performance, we block 
+#   all files by default (**) and explicitly whitelist ONLY the assets 
+#   required for the HPC runtime. This prevents local logs, caches, and 
+#   unverified vendor data from leaking into the production image.
+# ==============================================================================
+
+# 1. GLOBAL ISOLATION: Reject all files by default.
+**
+
+# 2. DEPENDENCY MANIFEST: Allow only the verified requirements for UV resolution.
+!infrastructure-setup/docker/hpc-training-worker/requirements.lock
+
+# 3. CORE SOURCE CODE: Allow the library source and package configuration.
+!rul-model-factory/pyproject.toml
+!rul-model-factory/src/
+
+# BLOCKLIST VENDOR OVERRIDES: Explicitly remove sub-paths that doesn't need in the package
+**/__pycache__/
+**/*.pyc
+rul-model-factory/src/rul_model_factory/vendor/bayesrul/tests/
+rul-model-factory/src/rul_model_factory/vendor/bayesrul/notebooks/
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/.github/
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/deprecated/
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/.gitattributes
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/.gitignore
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/poetry.lock
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/README.md
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/pyproject.toml
+#rul-model-factory/src/rul_model_factory/vendor/bayesrul/small-ci.sh
+
+# 4. INFRASTRUCTURE DEFINITIONS: Allow the build specifications themselves.
+!infrastructure-setup/docker/hpc-training-worker/Dockerfile
+!infrastructure-setup/docker/hpc-training-worker/Dockerfile.dockerignore
