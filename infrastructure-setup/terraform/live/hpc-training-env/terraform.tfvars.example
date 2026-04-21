@@ -1,0 +1,17 @@
+# ==============================================================================
+# GCP INFRASTRUCTURE CONFIGURATION
+# ==============================================================================
+# Note: Sensitive identifiers (project_id, bucket_name) are now managed via the 
+# global .env SSOT and injected by the orchestrators (TF_VAR_*).
+# ==============================================================================
+
+region        = "your-region"               # e.g. us-central1
+machine_type  = "c2d-standard-32"           # free trial GCP account has 32 vCPU limit, so this is the max
+repository_id = "rul-factory"
+disk_size_gb  = "100"                       # >100 is recommended for the training worker. 
+                                            # free trial GCP account has a 500 GB disk limit.
+
+
+
+# project_id    = "your-project-id-here"    # not used - managed by the global .env SSOT
+# bucket_name   = "your-bucket-name-here"   # not used - managed by the global .env SSOT
