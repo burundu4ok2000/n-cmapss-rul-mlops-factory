@@ -1,0 +1,43 @@
+# ==============================================================================
+# CLOUD TRAINER DEPENDENCY MANIFEST (V12.0.6)
+# Implementation: Surgical UV-Ready Requirement Baseline
+# 
+# Purpose:
+#   Delineates the core Python environment required for NASA N-CMAPSS 
+#   Bayesian RUL training. Optimized for reproducibility and binary parity.
+#
+# Rationale:
+#   - ML Core: Pinned to PyTorch 1.1x / Lightning 1.6 to ensure compatibility 
+#     with the validated Bayesian research code.
+#   - Cloud Ops: Minimalist GCP integration (Storage only) for artifact sync.
+#   - Versioning: Strict pinning to prevent runtime regressions during scale-out.
+# ==============================================================================
+
+# --- 1. DEEP LEARNING FOUNDATION (PyTorch & Bayesian Ops) ---
+setuptools==59.5.0
+pyDeprecate==0.3.1
+torch>=1.11.0,<2.0.0
+pytorch-lightning==1.7.7
+torchmetrics==0.10.3
+bayesian-torch==0.2.1
+pyro-ppl>=1.8.0
+tyxe @ git+https://github.com/TyXe-BDL/TyXe.git@368bf62ade8628d8f2af8d37e486b671f14578b6
+torchinfo>=1.6.6
+torchvision>=0.12.0
+
+# --- 2. DATA ENGINEERING & STORAGE (Scientific Stack) ---
+numpy>=1.22.3,<2.0.0
+pandas>=1.4.2,<2.0.0
+h5py>=3.6.0
+pyarrow>=8.0.0
+lmdb>=1.3.0
+scikit-learn>=1.0.2
+statsmodels>=0.13.2
+safetensors>=0.3.1
+
+# --- 3. INFRASTRUCTURE, LOGGING & CLOUD SYNC ---
+structlog>=21.1.0
+google-cloud-storage>=2.0.0
+tqdm>=4.64.0
+uncertainty-toolbox>=0.1.0
+python-dotenv>=1.0.1
