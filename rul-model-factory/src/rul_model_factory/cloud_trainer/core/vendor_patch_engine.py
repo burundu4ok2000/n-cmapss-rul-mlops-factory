@@ -63,6 +63,9 @@ def apply_runtime_patches(paths):
         if '--fit-context' in args or '--fit_context' in args:
              # Already present (e.g. from our own interceptor or if vendor adds it later)
              pass
+        elif '--archi' in args or 'archi' in args: # Enforce Bigception as standard
+             if 'default' in kwargs:
+                 kwargs['default'] = 'bigception'
         elif '--model-name' in args: # Use model-name as an anchor to inject new args
              original_add_argument(self, '--fit-context', type=str, default='flipout')
              original_add_argument(self, '--fit_context', type=str, default='flipout')
@@ -177,7 +180,7 @@ def execute_vendor_module(module_name: str, paths):
 
     # --- Master Configuration Map (V12.2.7 - Derived from vendor best_models) ---
     MASTER_CONFIG_MAP = {
-        'flipout': {'lr': 0.0001, 'pretrain': 10},
+        'flipout': {'lr': 0.00003, 'pretrain': 25},
         'lrt': {'lr': 0.0002, 'pretrain': 10},
         'radial': {'lr': 0.001, 'pretrain': 5},
         'mc_dropout': {'lr': 0.001, 'pretrain': 0}, # Success path of April 14th
@@ -218,8 +221,16 @@ def execute_vendor_module(module_name: str, paths):
             # Synchronize fit_context inside the dict
             hyp['fit_context'] = method
 
-            # Force Master Pretraining (5 epochs) for all Bayesian modes
-            if hyp and hyp.get('pretrain', 0) == 0 and config['pretrain'] > 0:
+            # V12.2.14: High-Quality Bayesian Overrides
+            if method.lower() == 'flipout':
+                hyp['num_particles'] = 8
+                hyp['prior_scale'] = 0.2
+                hyp['q_scale'] = 0.01
+                print(f"[INFO:Stability] V12.2.14 Applied FLIPOUT Quality Guard: particles=8, prior=0.2, q=0.01")
+
+            # Force Master Pretraining (e.g. 25 epochs) for Bayesian modes
+            # Check if it's 0 (unset) or 10 (common vendor default) to ensure override
+            if hyp and (hyp.get('pretrain', 0) == 0 or hyp.get('pretrain') == 10) and config['pretrain'] > 0:
                 # Prioritize CLI --pretrain if user provided one
                 if hasattr(user_args, 'pretrain') and user_args.pretrain > 0:
                     hyp['pretrain'] = user_args.pretrain
