@@ -6,6 +6,24 @@ This project is a **uv monorepo** containing three isolated packages with 1-clic
 
 ---
 
+## 🎯 The Industrial Challenge
+
+Bridging the gap between academic research and safety-critical aerospace deployment requires addressing three fundamental pillars:
+
+### 1. Operational Blindness (Flight Class Mismatch)
+*   **The Challenge**: SOTA models are often trained on idealized long-haul data (**Class 3**), but fail catastrophically on high-intensity short-haul missions (**Class 1/2**), providing overly optimistic life estimates without error awareness.
+*   **Our Approach**: We use **Bayesian Variational Inference (Flipout)** to provide a real-time **Uncertainty (Sigma)** signal. If the engine enters an unknown flight regime, the model's confidence drops, triggering a proactive maintenance alert.
+
+### 2. Engineering Fragility (The Shim Layer)
+*   **The Challenge**: Research code is often GPU-locked, lacks error handling, and suffers from numerical drift (NaN errors) in production.
+*   **Our Approach**: An **Adaptive Shim Architecture** intercepts logic at runtime, enforcing **hardware isolation (CPU-only)** and **Global Z-Score scaling** without modifying the original research source files.
+
+### 3. Regulatory Rigor (EU AI Act & DORA)
+*   **The Challenge**: High-risk AI systems require absolute traceability and weight-tamper protection.
+*   **Our Approach**: A trilateral security protocol: **SafeTensors** (binary safety) + **Sigstore** (cryptographic signing) + **Provenance** (immutable audit trails).
+
+---
+
 ## 🚀 MVP Quick Start (Operational Node)
 
 To launch the full stack (Data Ingestion, AI Inference, and Sentinel Dashboard):
@@ -46,6 +64,27 @@ The factory operates via a 4-node deterministic lifecycle:
 2.  **Node 1: Streamer** — Multi-unit fleet simulator (powered by Redpanda/Kafka).
 3.  **Node 2: Inference** — Bayesian "BigCeption" brain with dual-domain Z-score recovery.
 4.  **Node 3: Sentinel** — Real-time surveillance dashboard for RUL manifolds and uncertainty.
+
+---
+
+## 🛡️ Security Hardening & IAM Governance
+
+The factory operates under a **Zero-Trust** architecture, enforcing strict isolation between training artifacts and operational telemetry.
+
+### 1. IAM Role Scoping (Least Privilege)
+The system utilizes project-scoped service accounts with granular permissions:
+
+| Service | IAM Role | Operational Purpose |
+| :--- | :--- | :--- |
+| **GCS Storage** | `roles/storage.objectAdmin` | Scoped strictly to the `ncmapss-data-lake` bucket for artifact retrieval. |
+| **Cloud Logging** | `roles/logging.logWriter` | Enforces forensic audit-trail persistence without read-access to logs. |
+| **Artifact Registry**| `roles/artifactregistry.reader` | Pulling verified/signed production-grade Docker images. |
+| **Compute Engine** | `roles/compute.instanceAdmin.v1`| Self-termination capability to prevent zombie resource costs. |
+
+### 2. Supply Chain Integrity (Notary Protocol)
+*   **SafeTensors Isolation**: We eliminate the threat of arbitrary code execution by using `safetensors` instead of Python's `pickle`.
+*   **Keyless Signing**: Every Bayesian model is signed via **Sigstore**. The system verifies the `.sig` and `.cert` files before loading weights.
+*   **Non-Root Execution**: All compute workers and streaming nodes operate under a non-privileged user (UID 1000) to prevent container-breakout escalation.
 
 ---
 
