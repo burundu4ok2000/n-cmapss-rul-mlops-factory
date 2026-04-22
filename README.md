@@ -15,6 +15,9 @@ To launch the full stack (Data Ingestion, AI Inference, and Sentinel Dashboard):
 ./infrastructure-setup/scripts/streaming-pipeline-orchestrator.sh
 ```
 
+<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/a260c968-b9eb-4d94-ba18-3f075463e227" />
+
+
 ---
 
 ## 🛠️ Custom Model Training
@@ -57,6 +60,15 @@ The factory currently hosts two primary Bayesian model variants for comparative 
 | **Bayesian Particles**| `1` | `8` (Enhanced Posterior) |
 | **Pretrain Epochs** | `10` | `25` |
 | **Target Hardware** | CPU HPC | CPU HPC |
+
+<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/2c59b39d-1f84-462c-8b47-8305ff0d4111" />
+<img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
+<img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
+<img width="1470" height="956" alt="Screenshot 2026-04-21 at 08 55 05" src="https://github.com/user-attachments/assets/e912ab6d-85c2-4f53-ac9b-d8896ca59e2e" />
+
+
+
+
 
 > [!TIP]
 > The **Deep Research Run** provides significantly more stable uncertainty quantification due to the 8-particle Flipout approximation, making it the default for high-risk diagnostic scenarios.
