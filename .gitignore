@@ -13,6 +13,19 @@ _todo/
 # not completed files or directories
 blueprints/
 docs/
+rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc/data/
+
+
+
+# dbt example
+.dbt-example/
+
+
+
+
+
+
+
 
 
 
@@ -854,6 +867,10 @@ rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc/data/rul_ba
 !rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc/security/rul_bayesian_20260420T0650Z_cpu_hpc.val_DS07.parquet.sig
 !rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc/security/rul_bayesian_20260420T0650Z_cpu_hpc.val_DS08.parquet.cert
 !rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc/security/rul_bayesian_20260420T0650Z_cpu_hpc.val_DS08.parquet.sig
+
+
+!rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc/logs/
+!rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc/logs/TRAINING_SUCCESS.log
 
 #==========================================================================================================================
 # end of successful artifact run section

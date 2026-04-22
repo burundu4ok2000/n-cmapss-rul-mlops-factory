@@ -1,0 +1,367 @@
+# ==============================================================================
+# N-CMAPSS AGENTIC FACTORY: GLOBAL MANIFEST (SSOT)
+# ==============================================================================
+
+metadata:
+  factory_name: "N-CMAPSS telemetry factory"                    
+  version: "0.1.0"                                                                                            
+  owner: "Stan_Buren"                                         
+  description: >
+    N-CMAPSS MLOps Factory. A uv monorepo (3 isolated pkgs) with 1-click orchestrators for cloud training 
+    & Redpanda/Streamlit live inference. Trains a Bayesian VI (Flipout) model for RUL with uncertainty 
+    quantification. Built with Zero-Trust, SafeTensors & Sigstore to align with EU AI Act & DORA guidelines 
+    for high-risk AI systems.
+
+domains:    
+  model-training-process:
+    rul-model-factory:
+      description: ""
+      path: "rul-model-factory/src/rul_model_factory/"
+      components:
+        cloud_trainer:
+          core:
+            feature_engineering:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/core/feature_engineering.py"
+            parallel_execution:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/core/parallel_execution.py"
+            vendor_patch_engine:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/core/vendor_patch_engine.py"
+          logistics:
+            artifact_uploader:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/logistics/artifact_uploader.py"
+            path_resolver:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/logistics/path_resolver.py"
+          security:
+            artifact_sterilizer:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/security/artifact_sterilizer.py"
+            cryptographic_signer:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/security/cryptographic_signer.py"
+            provenance_generator:
+              description: ""
+              path: "rul-model-factory/src/rul_model_factory/cloud_trainer/security/provenance_generator.py"
+          execution_controller:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/cloud_trainer/execution_controller.py"
+    infrastructure-setup:
+      description: ""
+      path: "infrastructure-setup/"
+      components:
+        docker:
+          hpc-training-worker:
+            description: ""
+            dockerfile: 
+              description: ""
+              path: "infrastructure-setup/docker/hpc-training-worker/Dockerfile"
+            dockerignore: 
+              description: ""
+              path: "infrastructure-setup/docker/hpc-training-worker/.dockerignore"
+            requirements: 
+              description: ""
+              path: "infrastructure-setup/docker/hpc-training-worker/requirements.in"
+        scripts:
+          description: ""
+          pipeline_orchestrator:
+            description: ""
+            path: "infrastructure-setup/scripts/pipeline-orchestrator.sh"
+          image-build-publish:
+            description: ""
+            path: "infrastructure-setup/scripts/image-build-publish.sh"
+          worker-provisioning:
+            description: ""
+            path: "infrastructure-setup/scripts/worker-provisioning.sh"
+          data-lake-ingestion:
+            description: ""
+            path: "infrastructure-setup/scripts/data-lake-ingestion.sh"
+          compliance-sync:
+            description: ""
+            path: "infrastructure-setup/scripts/compliance-sync.sh"
+          artifact-synchronization:
+            description: ""
+            path: "infrastructure-setup/scripts/artifact-synchronization.sh"
+        data-logistics:
+          dataset_ingestion:
+            description: ""
+            path: "infrastructure-setup/src/infrastructure_setup/data_logistics/dataset_ingestion.py"
+        terraform:
+          live:
+            description: ""
+            path: "infrastructure-setup/terraform/live/"
+            _bootstrap:
+              main.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/live/_bootstrap/main.tf"
+            hpc-training-env:
+              backend.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/live/hpc-training-env/backend.tf"
+              main.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/live/hpc-training-env/main.tf"
+              variables.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/live/hpc-training-env/variables.tf"
+              kms.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/live/hpc-training-env/kms.tf"
+              terraform.tfvars:
+                description: ""
+                path: "infrastructure-setup/terraform/live/hpc-training-env/terraform.tfvars"
+          modules:
+            description: ""
+            path: "infrastructure-setup/terraform/modules/"
+            ephemeral-hpc-worker:
+              description: ""
+              path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker"
+              scripts:
+                startup.sh.tftpl:
+                  description: ""
+                  path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker/scripts/startup.sh.tftpl"
+              compute.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker/compute.tf"
+              iam.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker/iam.tf"
+              outputs.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker/outputs.tf"
+              storage.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker/storage.tf"
+              variables.tf:
+                description: ""
+                path: "infrastructure-setup/terraform/modules/ephemeral-hpc-worker/variables.tf"
+      
+  compliance-scraper:
+    description: ""
+    path: "infrastructure-setup/src/infrastructure_setup/compliance_ingestion/"
+    components:
+      cellar_client:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/compliance_ingestion/cellar_client.py"
+      law_processor:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/compliance_ingestion/law_processor.py"
+      registry:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/compliance_ingestion/registry.py"
+      semantic_chunker:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/compliance_ingestion/semantic_chunker.py"
+  
+  guides-ingestion:
+    description: ""
+    path: "infrastructure-setup/src/infrastructure_setup/guides_ingestion/"
+    components:
+      guide_client:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/guides_ingestion/guide_client.py"
+      guide_processor:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/guides_ingestion/guide_processor.py"
+      registry:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/guides_ingestion/registry.py"
+      semantic_chunker:
+        description: ""
+        path: "infrastructure-setup/src/infrastructure_setup/guides_ingestion/semantic_chunker.py"
+
+  telemetry-streaming:
+    description: ""
+    path: "infrastructure-setup/src/infrastructure_setup/telemetry_streaming/"
+    components:
+      
+   
+
+
+products:
+  model-training-artifacts:
+      path: "rul-model-factory/artifacts/"
+      description: ""
+      example: "rul_bayesian_20260414T1122Z_cpu_hpc"
+      folders:
+        data/:
+          description: ""
+        logs/:
+          description: ""
+        metadata/:
+          description: ""
+        model/:
+          description: ""
+        security/:
+          description: ""
+  workspace:
+    path: ".workspace/"
+    description: ""
+    folders:
+      compliance-data:
+        description: ""
+        path: ".workspace/compliance-data/"
+      dataset-resources:
+        description: ""
+        path: ".workspace/dataset-resources/"
+      guides-data:
+        description: ""
+        path: ".workspace/guides-data/"
+      local-logs:
+        description: ""
+        path: ".workspace/local-logs/"
+      raw-telemetry:
+        description: ""
+        path: ".workspace/raw-telemetry/"
+
+
+
+vendors:
+  bayesrul:
+    description: ""
+    path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul"
+    sources:
+      inference:
+        description: ""
+        path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/inference/"
+        contains:
+          deep_ensemble.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/inference/deep_ensemble.py"
+          dnn.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/inference/dnn.py"
+          inference.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/inference/inference.py"
+          mc_dropout.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/inference/mc_dropout.py"
+          vi_bnn.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/inference/vi_bnn.py"
+      lightning_wrappers:
+        description: ""
+        path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/lightning_wrappers/"
+        contains:
+          bayesian.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/lightning_wrappers/bayesian.py"
+          frequentist.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/lightning_wrappers/frequentist.py"
+      models:
+        description: ""
+        path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/models/"
+        contains:
+          conv.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/models/conv.py"
+          inception.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/models/inception.py"
+          linear.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/models/linear.py"
+      ncmapss:
+        description: ""
+        path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss"
+        contains:
+          dataset.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/dataset.py"
+          generate_files.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/generate_files.py"
+          json_best_models.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/json_best_models.py"
+          metrics_tabular.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/metrics_tabular.py"
+          optimize_bi_obj.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/optimize_bi_obj.py"
+          optimize_single.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/optimize_single.py"
+          preprocessing.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/preprocessing.py"
+          train_best_models.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/train_best_models.py"
+          train_model.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/ncmapss/train_model.py"
+      utils:
+        description: ""
+        path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils"
+        contains:
+          calibration.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/calibration.py"
+          get_study_mean_time.sql:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/get_study_mean_time.sql"
+          lmdb_utils.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/lmdb_utils.py"
+          metrics.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/metrics.py"
+          miscellaneous.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/miscellaneous.py"
+          plotting.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/plotting.py"
+          post_process.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/post_process.py"
+          radial.py:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/utils/radial.py"
+      results/ncmapss/best_models:
+        description: ""
+        path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models"
+        contains:
+          DEEP_ENSEMBLE:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/DEEP_ENSEMBLE/000.json"
+          FLIPOUT:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/FLIPOUT/000.json"
+          LRT:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/LRT/000.json"
+          MC_DROPOUT:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/MC_DROPOUT/000.json"
+          RADIAL:
+            description: ""
+            path: "rul-model-factory/src/rul_model_factory/vendor/bayesrul/results/ncmapss/best_models/RADIAL/000.json"
+    paths-not-included-in-docker-image:
+      tests:
+        paths:
+          - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/.github/"
+          - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/tests/"
+          - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/small-ci.sh"
+      dependency_files:
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/poetry.lock"
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/pyproject.toml"
+      github:
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/.gitignore"
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/.gitattributes"
+      readme:
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/README.md"
+      notebooks:
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/notebooks/"
+      depreciated:
+        - "rul-model-factory/src/rul_model_factory/vendor/bayesrul/bayesrul/deprecated/"
+
+
+      

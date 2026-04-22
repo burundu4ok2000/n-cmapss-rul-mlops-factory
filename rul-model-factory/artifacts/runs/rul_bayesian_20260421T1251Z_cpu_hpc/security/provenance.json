@@ -1,0 +1,34 @@
+{
+    "factory_version": "V12.1.0",
+    "audit_timestamp": "2026-04-21T12:30:29.550946Z",
+    "identity": {
+        "run_name": "unknown_run",
+        "instance_name": "cfccba47dd38",
+        "git_commit": "initial-not-committed"
+    },
+    "software_context": {
+        "python_version": "3.10.12",
+        "libraries": {
+            "torch": "1.12.0+cu116",
+            "pytorch_lightning": "1.7.7",
+            "safetensors": "0.7.0"
+        }
+    },
+    "hardware_context": {
+        "system": "Linux",
+        "processor": "x86_64",
+        "cpu_count": 32
+    },
+    "data_lineage": {
+        "N-CMAPSS_DS01-005.h5": "3abdcee2a3c8136e8880e5d43ac8cdf12ab9f7f3ab37145f23b24c11335afbed",
+        "N-CMAPSS_DS02-006.h5": "47971a68b239ecb756833218a95d68ded6eb7e63ee84e86671c8b188de1ca765",
+        "N-CMAPSS_DS03-012.h5": "f67cc4bd0cf927f09eb8e0198bd62c777e1c6213177cfc46d81cc43bba52c333",
+        "N-CMAPSS_DS04.h5": "2b58cbb78497679fadafe0761203b2ae3b0e4e1193039dc34ca25f17ecaeb2e6",
+        "N-CMAPSS_DS05.h5": "ef99ead42ac184503035895797c16e9a7e42554a08074aa760d0bba39db42e23",
+        "N-CMAPSS_DS06.h5": "91ccf478b21dd6337cfa608f20b647ec04228d59cf4ee59be87fad5f08b17b20",
+        "N-CMAPSS_DS07.h5": "2f88abc61a532d2e30a6e5ff100a511be4921484a6c7071bc8504e300da4d3bd",
+        "N-CMAPSS_DS08a-009.h5": "10ddf52e5441a05e3d0d8d797a34e0e5a9ac73dce8ae35d7b22d1ef224d24836",
+        "N-CMAPSS_DS08c-008.h5": "150bf696dcf4bbac84518f439ac0d491410037881e214c5b10c048a71770bb38",
+        "N-CMAPSS_DS08d-010.h5": "693b035be5e78d50d5da58bcac559e44ee371159efdebe2fac433e567a8af884"
+    }
+}

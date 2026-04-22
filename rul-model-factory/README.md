@@ -314,6 +314,22 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 ./infrastructure-setup/scripts/pipeline-orchestrator.sh
 ```
 
+### 🆘 Troubleshooting: Manual Artifact Recovery
+If the `pipeline-orchestrator.sh` terminates unexpectedly after training (e.g., due to telemetry timeouts or shell syntax anomalies) but before the final sync, you must recover artifacts manually to avoid data loss.
+
+**1. Identify your Session Identifiers:**
+- **Worker Name**: Look for `ncmapss-factory-worker-YYYYMMDD-HHMM` in your terminal logs or GCE console.
+- **Run ID**: Check GCS for the latest folder: `gcloud storage ls gs://ncmapss-data-lake-[PROJECT_ID]/results/runs/`.
+
+**2. Execute the Harvester Manually:**
+Run the synchronization script directly from the project root:
+
+```bash
+./infrastructure-setup/scripts/artifact-synchronization.sh [WORKER_NAME] [RUN_ID]
+```
+
+# example: ./infrastructure-setup/scripts/artifact-synchronization.sh "ncmapss-factory-worker-20260420-2206" "runs/bayesian-20260420-0e405c"
+
 
 ### ⚡ Optimization: Fast-Forward (Artifact Recycling)
 The preprocessing stage (`HDF5 -> Parquet -> LMDB`) is computationally expensive, taking approximately **18 minutes** on a standard **32-core** compute node. 
