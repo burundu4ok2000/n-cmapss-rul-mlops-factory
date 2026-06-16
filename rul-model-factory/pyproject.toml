@@ -8,6 +8,7 @@ authors = [
     { name = "Stan_Buren", email = "burundu4ok2000@gmail.com" }
 ]
 dependencies = [
+    "pyyaml>=6.0.3",
 ]
 requires-python = ">=3.13"
 
@@ -20,5 +21,6 @@ packages = ["src/rul_model_factory"]
 
 [dependency-groups]
 dev = [
-
+    "safetensors>=0.7.0",
+    "structlog>=25.5.0",
 ]

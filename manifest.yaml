@@ -12,6 +12,241 @@ metadata:
     quantification. Built with Zero-Trust, SafeTensors & Sigstore to align with EU AI Act & DORA guidelines 
     for high-risk AI systems.
 
+
+metadata:
+  name: architecture-rules
+spec:
+  architecture_principles:
+    SOLID:
+      - id: SRP
+        name: Single Responsibility Principle
+        description: "Each module or class should have only one reason to change."
+        rules: 
+          one module - one chief:
+            description: |
+              In a corporate environment, changes to code never come on their own. 
+              They are brought by people (Actors).
+
+              Imagine you have a Python class `TurbineTelemetry`. 
+              It has wear calculation methods (for Data Scientist) 
+              and log formatting methods (for EASA auditor).
+
+              One day the auditor says: "Log format according to EU Annex 11 must change". 
+              
+              You open the TurbineTelemetry class, change the formatting and...
+              accidentally break the wear calculation math. 
+              
+              The turbine stops. Fine.
+
+              SRP principle means that code that changes for different reasons must be physically separated. 
+              
+              One module - one chief. 
+              
+              If Data Scientist and Auditor are two different people, their logic has no right to live 
+              in the same class, even if technically they work with the same bytes.
+
+      - id: OCP
+        name: Open-Closed Principle
+        description: "Software entities should be open for extension, but closed for modification."
+        rules:
+          certified core is immutable:
+            description: |
+              In aviation and medicine (DO-178C standards), certifying one module costs millions of francs.
+
+              If you write a DataPipeline class that passes audit, it becomes "concrete".
+
+              Suddenly the business asks: "Add encryption before sending".
+
+              If you open the data_pipeline.py file and add import encryptor, you violate OCP. 
+              The old, tested code is changed. It needs to be revalidated from scratch. 
+              The factory stands still for a week.
+
+              The senior designs the system so that the new code wraps the old one (like a matryoshka), 
+              without changing a single line inside the original. 
+              In Python, this is brilliantly implemented using Decorators (@) or the Middleware pattern. 
+              
+              You add new functionality without touching the certified core.
+
+      - id: LSP
+        name: Liskov Substitution Principle
+        description: "Objects of a superclass should be replaceable with objects of its subclasses without breaking the application."
+        rules:
+          inheritance is about behavioral contract:
+            description: |
+              In aviation, a turbine is a black box. When an engineer clicks "Run", the turbine must spin. 
+              Always. No exceptions. 
+              If I create a "SmartTurbine" class that inherits from the standard one, but sometimes decides to "sleep" 
+              to save energy, it violates this contract. The main program expects the turbine to spin, but gets nothing. Crash.
+              Liskov means: the moment you press the button, the behavior must be 100% predictable. 
+              If you change the rules, you must physically create a NEW component (e.g. SmartTurbineEnergySavingMode), 
+              not overwrite the old one.
+
+              Liskov says inherit classes just to reuse a piece of code is forbidden. 
+              A subclass must be a perfect substitute for its superclass without surprising the calling code.
+
+              Real-world example:
+              You have a base class LocalSensor (pressure sensor).
+              
+              LocalSensor Contract (Promise): The read_pressure() method always returns a float and executes in 1 millisecond. 
+              It never fails with an error.
+
+              A year passes. The business moves to IoT. You create a descendant class CloudSensor(LocalSensor).
+              Inside read_pressure() it makes an HTTP request to AWS.
+
+              What happens in production?
+              The emergency reactor cooling module calls sensor.read_pressure(). 
+              It expects a response in 1 ms. But your CloudSensor waits 500 ms for the network. 
+              And if there is no internet, it throws a TimeoutException. 
+              The cooling module, designed to work with LocalSensor, doesn't know about TimeoutException. 
+              It doesn't catch this error. The program crashes, the reactor overheats.
+
+              Result of Liskov violation: Technically (in OOP) CloudSensor is a descendant. 
+              It has the same method. But behaviorally it violated the physical contract (speed and absence of network exceptions).
+
+              How to do it correctly: Inherit not the implementation, but abstractions. 
+              CloudSensor and LocalSensor cannot be in the same hierarchy 
+              if they have different behavioral guarantees.
+
+      - id: ISP
+        name: Interface Segregation Principle
+        description: "Clients should not be forced to depend on interfaces they do not use."
+        rules:
+          Principle of Least Privilege (Zero Trust Security):
+            description: |
+              Imagine a Python class for a gas turbine
+              `IGasTurbine`,
+              which has methods `start_compressor()`, `ignite_combustor()`, `inject_fuel()` 
+              and `emergency_shutdown()`.
+
+              You create a simple dashboard which job is to monitor the turbine and display the temperature. 
+              You give this dashboard the full `IGasTurbine` object.
+
+              From a security standpoint (and for compliance with regulations like NIS2 Directive), 
+              you have just handed over the master switch for the entire power plant to a monitoring dashboard.
+
+              If a hacker breaches the dashboard, or if a bug in the monitoring agent accidentally calls 
+              the wrong function, they can trigger `emergency_shutdown()` 
+              and shut down the entire grid.
+
+              ISP demands that we split interfaces. 
+
+              We create two separate interfaces:
+                `ITemperatureSensor` (read-only)
+                `IHardwareController` (control operations).
+
+              We then pass only the `ITemperatureSensor` interface to the AI agent.
+
+              In Python, where interfaces are not strictly enforced by the type system, 
+              this is achieved by passing narrow, dedicated function arguments 
+              or specific adapter classes, rather than the entire heavy object.
+
+      - id: DIP
+        name: Dependency Inversion Principle
+        description: "High-level modules should not depend on low-level modules. Both should depend on abstractions."
+
+
+    HEXAGONAL_ARCHITECTURE:
+      - id: PAA
+        name: Ports and Adapters
+        description: |
+          The core domain logic is isolated in the center (the hexagon). 
+          It does not know anything about databases, AI frameworks, or cloud services. 
+          The outside world interacts with the core through strictly defined 'ports' (interfaces), 
+          and 'adapters' (implementations). 
+
+          This allows you to swap the database or AI model 
+          without touching the core logic.
+        rules:
+          Dependence arrows always point inward to the core:
+            description: |
+              In the diagram, the arrows of dependencies must always point inward, 
+              towards the core (the hexagon). 
+              This visually represents that the application logic 
+              is protected from the outside world.
+
+          Split the application into two parts:
+            description: |
+              Split the application into two parts:
+                - The Core: contains the business logic and does not depend on any external technologies 
+                  (databases, frameworks, etc.).
+                - The Adapters (Shell): contains the code that interacts with the outside world 
+                (databases, APIs, file systems, etc.).
+
+          The core depends on nothing. The adapters depend on the core:
+            description: |
+              For example, in Python, the Core might define a set of Abstract Base Classes 
+              (ABCs) for data storage and AI model inference.
+
+              ```python
+              from abc import ABC, abstractmethod
+              from typing import Any
+
+              class IStorageDriver(ABC):
+                  @abstractmethod
+                  def save_model(self, model: bytes) -> str: pass
+
+              class IModelSerializer(ABC):
+                  @abstractmethod
+                  def serialize(self, data: Any) -> bytes: pass
+              ```
+
+              The Adapter layer then implements these interfaces using concrete technologies
+              (e.g., `S3StorageDriver` using boto3, `TensorFlowSerializer` using TensorFlow):
+
+              ```python
+              import boto3
+
+              class S3StorageDriver(IStorageDriver):
+                  def save_model(self, model: bytes) -> str:
+                      # Uses boto3 to upload to S3
+                      s3 = boto3.client('s3')
+                      s3.put_object(Bucket='my-bucket', Key='model.pkl', Body=model)
+                      return 's3://my-bucket/model.pkl'
+              ```
+
+              Crucially, the Core does not import `boto3`. 
+              Dependencies are injected at runtime, often through a composition root or 
+              dependency injection container in the Adapter layer.
+
+              This separation ensures that if you decide to switch from S3 to Azure Blob 
+              Storage, or from TensorFlow to PyTorch, you only rewrite the Adapter 
+              layer, leaving the business logic untouched.
+
+              This design principle is fundamental to creating modular, testable, and 
+              adaptable software architectures.
+
+          change of signature injection vs guessing:
+            description: |
+              Before (run_id: str = None): PathResolver was "greedy" and "omniscient". 
+
+              It only took a string ID and tried to guess the rest 
+              (where is the root? where is Docker?) using os.getenv and Path.exists(). 
+
+              This is Tight Coupling. If you changed the path in Docker, 
+              you had to go into the Core and edit the code.
+
+              After (infra: InfrastructurePort): This is Dependency Injection. 
+              PathResolver now says:
+
+              "I am a pure path calculator. I don't know where I am. Give me any object (infra) 
+              that adheres to the Contract (Port), and I will work based on it".
+
+              Now you have separated the "business logic" (what folders we need) 
+              from the "infrastructure" (where we are now). 
+              Now the core logic (PathResolver) is locked in a safe and never changes. 
+              Only Adapters change from the outside.
+
+              This is why we need InfrastructureAdapter abstraction - 
+              it abstracts away the infrastructure details from the core logic. 
+
+              If you decide to move this application to bare metal or AWS EC2, 
+              you don't need to rewrite PathResolver.
+
+              You just create a new adapter (e.g., BashAdapter) 
+              that implements the InfrastructurePort interface 
+              and provides the correct paths for the new environment.
+
+
 domains:    
   model-training-process:
     rul-model-factory:

@@ -1,0 +1,142 @@
+# ==============================================================================
+# КАК ЭТО СЕЙЧАС (CURRENT STATE) (v 12.x.x)
+# ==============================================================================
+
+# --- ЛОГИКА ВЕНДОРА (Константы в PathResolver) ---
+vendor_code_root: "rul-model-factory/src/rul_model_factory/vendor"
+vendor_data_subdir: "ncmapss"
+vendor_results_subdir: "results"
+vendor_best_models_subdir: "best_models"
+
+# --- ЛОГИКА ДОКЕРА (Runtime Environment) ---
+docker:
+  workdir: "/app"
+  python_path: "/app/rul-model-factory/src"
+  mounts:
+    data: "/app/data"                                           # Мапится из /tmp/data на хосте (startup.sh.tftpl:L103)
+    results: "/app/results"                                     # Мапится из /tmp/data/results на хосте (startup.sh.tftpl:L104)
+  identity:
+    user: "trainer"                                             # UID 1000 внутри контейнера
+    uid: 1000
+  image_tag: "us-central1-docker.pkg.dev/${PROJECT_ID}/rul-factory/cloud-trainer:latest"
+
+# --- ЛОГИКА ОБЛАКА (GCS Infrastructure) ---
+cloud:
+  # [BOOTSTRAP PHASE]: Создаются через /infrastructure-setup/terraform/live/_bootstrap/
+  bootstrap:
+    terraform_state_bucket: "ncmapss-terraform-state-${GCP_PROJECT_ID}" # [main.tf:L12] (Permanent State Storage)
+
+  # [HPC ENVIRONMENT PHASE]: Создаются через /infrastructure-setup/terraform/live/hpc-training-env/
+  buckets:
+    data_lake: "ncmapss-data-lake-${GCP_PROJECT_ID}"            # [storage.tf:L6] (Main Data & Results Lake)
+    artifact_registry: "rul-factory"                            # [storage.tf:L37] (Docker Repository ID)
+
+  storage_layout:
+    raw_telemetry: "raw/*.h5"                                   # [startup.sh.tftpl:L86] (Source for Fueling Phase)
+    results_prefix: "results/runs/${RUN_ID}/"                   # [startup.sh.tftpl:L92] (Normalized artifacts)
+    logs_prefix: "logs/${INSTANCE_NAME}/"                       # [startup.sh.tftpl:L115] (Startup & Terminal logs)
+    quarantine: "quarantine/runs/${RUN_ID}/"                    # [startup.sh.tftpl:L50] (Forensic recovery buffer)
+    sentinel: "logs/${INSTANCE_NAME}/TRAINING_SUCCESS.log"       # [startup.sh.tftpl:L139] (Barrier sentinel)
+
+# --- ЛОГИКА ЛОКАЛЬНОЙ ИНЖЕСТИИ (Ingestion Areas) ---
+ingestion:
+  workspace_root: ".workspace"                                  # Базовая директория для всех локальных загрузок
+  telemetry: "raw-telemetry"                                    # N-CMAPSS .h5 файлы (Raw source)
+  resources: "dataset-resources"                                # PDF и IPYNB из датасета (.pdf and .ipynb from original N-CMAPSS dataset source)
+  compliance: "compliance-data"                                 # Фрагменты законов (AI Act, etc.)
+  guides: "guides-data"                                         # Фрагменты гайдов (Google Style, etc.)
+  logs: "local-logs"                                            # Логи процессов скачивания (all local shell scripts logs)
+  temp_buffer: ".tmp_ingestion_buffer"                          # Атомарный буфер для распаковки (become telemetry/ and resources/ after unzip)
+
+# --- ЛОГИКА ЛОКАЛЬНОЙ ЖАТВЫ (Harvesting / Dell) ---
+local:
+  provenance_dir: "results/provenance"                          # Хранилище подписей образа (Storage for Image Signatures)
+  artifacts_root: "rul-model-factory/artifacts/runs"            # Финальное хранилище нормализованных данных
+  temp_sync_dir: ".raw_sync"                                    # Временный буфер для rsync (Inside ${RUN_ID})
+  
+  # Правила нормализации (artifact-synchronization.sh)
+  normalization_schema:
+    model:
+      ext: ["*.safetensors", "*.pt"]
+      prefix_applied: true
+    data:
+      ext: ["*.parquet", "*.lmdb"]
+      prefix_applied: true
+    logs:
+      ext: ["*.log", "events.out.tfevents.*"]
+      prefix_applied: true
+    metadata:
+      ext: ["hparams.yaml"]
+      prefix_applied: true
+    security:
+      ext: ["provenance.json*", "*.sig", "*.cert"]
+      prefix_applied: true
+    unclassified:
+      desc: "Zero-Leakage catch-all"
+
+# ==============================================================================
+# ВИЗУАЛЬНАЯ СТРУКТУРА (CURRENT STATE TREE)
+# ==============================================================================
+#
+#  1. PROJECT ROOT (Local / Development)
+#  / (Project Root)
+#  ├── .workspace/                    <--- [ingestion.workspace_root]
+#  │   ├── raw-telemetry/             <-- [ingestion.telemetry] (.h5 source)
+#  │   ├── dataset-resources/         <-- [ingestion.resources] (.pdf and .ipynb from original N-CMAPSS dataset source)
+#  │   ├── compliance-data/           <-- [ingestion.compliance]
+#  │   ├── guides-data/               <-- [ingestion.guides]
+#  │   ├── local-logs/                <-- [ingestion.logs] (all local shell scripts logs)
+#  │   └── .tmp_ingestion_buffer/     <-- [ingestion.temp_buffer] (become raw-telemetry/ and dataset-resources/ after unzipping)
+#  │
+#  ├── results/                       <--- [GLOBAL SHARED RESULTS]
+#  │   └── provenance/                <-- [SECURITY: FACTORY PASSPORT] (Global Image Identity)
+#  │       ├── image_digest.txt       <-- SHA256 of current production-grade image
+#  │       ├── image_digest.txt.sig   <-- Sigstore Cryptographic Signature
+#  │       └── image_digest.txt.cert  <-- OIDC Identity Certificate
+#  │
+#  └── rul-model-factory/
+#      └── artifacts/
+#          └── runs/                  <--- [local.artifacts_root] (INDUSTRIAL ARTIFACT STORAGE)
+#              └── ${RUN_ID}/         <-- Session Isolation Directory
+#                  ├── .raw_sync/     <-- [local.temp_sync_dir] (Transient buffer for rsync from GCS)
+#                  ├── model/         <-- Normalized .pt/.safetensors (artifact-synchronization.sh)
+#                  ├── data/          <-- Normalized .parquet/.lmdb
+#                  ├── logs/          <-- Normalized .log and Tensorboard events
+#                  ├── metadata/      <-- Normalized hparams.yaml and runtime configs
+#                  ├── security/      <-- Provenance signatures and certificates
+#                  └── unclassified/  <-- Zero-Leakage catch-all for unknown files
+#
+#  ----------------------------------------------------------------------------
+#  2. FILESYSTEM MAPPING (Worker Node / Docker)
+#
+#  HOST SIDE (Ephemeral Worker /tmp):  DOCKER SIDE (Trainer Container /app):
+#  /tmp/data/                 <───────> /app/data/          [docker.mounts.data]
+#  /tmp/data/results/         <───────> /app/results/       [docker.mounts.results] (Legacy Matryoshka)
+#  ----------------------------------------------------------------------------
+#
+#  3. GCS STORAGE LAYOUT (Cloud Infrastructure):
+#  gs://ncmapss-data-lake-de-${GCP_PROJECT_ID}
+#  ├── raw/                           <-- [cloud.storage_layout.raw_telemetry] (Fueling Source)
+#  │   ├── N-CMAPSS_DS01-005.h5       <-- (Dataset Engines 01-05)
+#  │   ├── N-CMAPSS_DS02-006.h5       <-- (Dataset Engines 06)
+#  │   └── ... (Total 10 files)       <-- (Complete N-CMAPSS corpus)
+#  │
+#  ├── results/
+#  │   ├── runs/                      <-- [cloud.storage_layout.results_prefix] (Session Storage) (${RUN_ID}/ example: "bayesian-YYYYMMDD-XXXXXX/")
+#  │   │   └── ${RUN_ID}/
+#  │   │       ├── parquet/           <-- Serialized flight windows
+#  │   │       ├── lmdb/              <-- Fast-access training storage
+#  │   │       └── lightning_logs/    <-- Raw model checkpoints & TB events
+#  │   │
+#  │   └── frequentist/               <-- [LEGACY] (Old runs e.g. cpu_bruteforce_0414/) 
+#  │
+#  ├── logs/                          <-- [cloud.storage_layout.logs_prefix] (In-Flight Telemetry) (${INSTANCE_NAME}/ example: "ncmapss-factory-worker-YYYYMMDD-XXXX/")
+#  │   └── ${INSTANCE_NAME}/
+#  │       ├── TRAINING_SUCCESS.log   <-- [SENTINEL] (Success marker for Barrier Pattern)
+#  │       ├── PREPROC_FAILED_*.log   <-- [FORENSIC] (Traceback of preprocessing crashes)
+#  │       └── TRAIN_FAILED_*.log     <-- [FORENSIC] (Traceback of training crashes)
+#  │
+#  └── quarantine/                    <-- [cloud.storage_layout.quarantine] (Crash Recovery)
+#      └── runs/
+#          └── ${RUN_ID}/             <-- Raw sync of $STAGING_DIR/results after failure
+#  ----------------------------------------------------------------------------

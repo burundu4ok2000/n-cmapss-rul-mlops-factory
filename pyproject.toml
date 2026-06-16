@@ -1,10 +1,19 @@
 [project]
-name = "n-cmapss-agentic-factory"
+name = "n-cmapss-factory"
 version = "0.1.0"
-description = "N-CMAPSS MLOps RUL Factory"
+description = "Data Engineering portfolio for NASA N-CMAPSS Remaining Useful Life (RUL) pipeline factory."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "airportsdata>=20260315",
+    "dbt-core>=1.11.8",
+    "dbt-duckdb>=1.10.1",
+    "duckdb>=1.5.2",
+    "h5py>=3.16.0",
+    "polars>=1.40.1",
+    "streamlit>=1.53.0",
+    "plotly>=6.0.0",
+]
 
 [project.optional-dependencies]
 nasa-research = [

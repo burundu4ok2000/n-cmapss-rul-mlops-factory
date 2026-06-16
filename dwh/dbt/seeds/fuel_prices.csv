@@ -1,0 +1,10 @@
+dataset_id,region_label,eia_spot_price_usd_per_gal,hedged_price_usd_per_gal
+N-CMAPSS_DS01-005,North America Short,2.95,2.55
+N-CMAPSS_DS02-006,North America Long,2.87,2.55
+N-CMAPSS_DS03-012,Europe Short,3.20,2.80
+N-CMAPSS_DS04,Europe Long,3.10,2.80
+N-CMAPSS_DS05,Middle East Short,2.60,2.40
+N-CMAPSS_DS06,Middle East Long,2.55,2.40
+N-CMAPSS_DS07,Asia Pacific Short,3.05,2.70
+N-CMAPSS_DS08a-009,Asia Pacific Long,2.98,2.70
+N-CMAPSS_DS08c-008,Asia Pacific Long Degraded,3.02,2.70

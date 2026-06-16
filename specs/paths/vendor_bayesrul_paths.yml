@@ -1,0 +1,92 @@
+# ==============================================================================
+# VENDOR LOGIC: FORENSIC BLUEPRINT
+# ==============================================================================
+# [CRITICAL]: Эти пути захардкожены в методах вендора. 
+# Любое изменение здесь требует хирургического вмешательства в указанные файлы.
+
+# 1. СТАТИЧЕСКИЕ ПОДПАПКИ (Относительно базовых путей)
+vendor_fixed_subdirs:
+  logs_root: "lightning_logs"                                   # [miscellaneous.py:L52]
+  checkpoints: "checkpoints"                                    # [miscellaneous.py:L54]
+  results: "predictions"                                        # [post_process.py:L20]
+  pretrain_logs: "lightning_logs/version_"                      # [vi_bnn.py:L93-97]
+
+# 2. ИЕРАРХИЯ N-CMAPSS (Глубокая вложенность)
+vendor_ncmapss_hierarchy:
+  results_root: "results/ncmapss"                               # [metrics_tabular.py], [json_best_models.py]
+  subdirs: ["bayesian", "frequentist"]                          # [metrics_tabular.py]
+  studies_root: "results/ncmapss/studies"                       # [json_best_models.py:L53]
+  best_models: "results/ncmapss/best_models"                    # [json_best_models.py:L72], [train_best_models.py:L81]
+  
+  # Специфика Optuna (Внимание на разные имена файлов БД!)
+  optuna:
+    bi_obj: "bi_obj/optimization.db"                            # [optimize_bi_obj.py:L387, L394]
+    single: "single_obj/studies.db"                             # [optimize_single.py:L397, L405]
+  
+  # Структура папки данных (data_path)
+  data:
+    parquet: "parquet"                                          # [preprocessing.py:L113]
+    lmdb: "lmdb"                                                # [preprocessing.py:L453], [dataset.py:L39]
+
+# 3. ДИНАМИЧЕСКИЕ МУТАЦИИ (Runtime Path Changes)
+vendor_dynamic_mutations:
+  # Конструирование base_log_dir в __init__ 
+  inference_modes: ["frequentist", "bayesian", "studies"]       # [dnn.py:L49], [vi_bnn.py:L67], [mc_dropout.py:L65], [deep_ensemble.py:L65]
+  # КРИТИЧНО: Инъекция в путь прямо во время fit() через split("/")[:-1]
+  vi_bnn_injection: ["single_obj", "bi_obj"]                    # [vi_bnn.py:L126-132]
+
+# 4. ИМЕНА ФАЙЛОВ И ТОЧКИ ВХОДА (IO Anchors)
+vendor_io_anchors:
+  hardcoded_files:
+    results_parquet: "results.parquet"                          # [post_process.py:L23]
+    checkpoint_ext: "*.ckpt"                                    # [miscellaneous.py:L57]
+    pretrain_pt_pattern: "pretrained_{}.pt"                     # [vi_bnn.py:L100]
+    optuna_db: "optimization.db"                                # [json_best_models.py:L63]
+    best_model_json: "{:03d}.json"                              # [json_best_models.py:L79], [train_best_models.py:L85]
+    pca_pickle: "pca.pkl"                                       # [lmdb_utils.py:L86]
+
+  fallbacks:
+    # Дефолты в аргументах функций пост-процессинга и инференса
+    default_data: "data/ncmapss/"                               # [generate_files.py:L7], [optimize_single.py:L324], [optimize_bi_obj.py:L314], [post_process.py:L139]
+    # ОПАСНО: Выход за корень
+    relative_data: "../data/ncmapss"                            # [post_process.py:L312], [plotting.py:L79]
+    # Передается путь к весам
+    bayesian_pretrain: "pretrain_file"                          # [bayesian.py:L157] 
+    # Специфический ключ в чекпоинте
+    pyro_param_store: "param_store"                             # [bayesian.py:L114] 
+
+  methods:
+    # Точки входа для записи весов (всегда принимают 'path: str')
+    save_load_api: ["save", "load"]                             # [conv.py:L66], [inception.py:L51], [linear.py:L59]
+
+# ==============================================================================
+# ВИЗУАЛЬНАЯ СТРУКТУРА (FOLDER TREE)
+# ==============================================================================
+#
+#  /app (Docker Root) или project_root/
+#  ├── data/ (Mount Point)
+#  │   └── ncmapss/
+#  │       ├── parquet/           <-- [vendor_ncmapss_hierarchy.data.parquet]
+#  │       ├── lmdb/              <-- [vendor_ncmapss_hierarchy.data.lmdb]
+#  │       └── pca.pkl            <-- [vendor_hardcoded_files.pca_pickle]
+#  │
+#  ├── results/ (Mount Point)
+#  │   └── ncmapss/
+#  │       ├── bayesian/          <-- [vendor_ncmapss_hierarchy.subdirs]
+#  │       │   └── lightning_logs/
+#  │       ├── frequentist/       <-- [vendor_ncmapss_hierarchy.subdirs]
+#  │       │   └── lightning_logs/
+#  │       ├── studies/           <-- [vendor_ncmapss_hierarchy.studies_root]
+#  │       │   ├── bi_obj/
+#  │       │   │   └── optimization.db
+#  │       │   └── single_obj/
+#  │       │       └── studies.db
+#  │       └── best_models/       <-- [vendor_ncmapss_hierarchy.best_models]
+#  │           └── <MODEL_FAMILY>/
+#  │               └── 000.json
+#  │
+#  └── lightning_logs/ (Temporary Vendor Anchor)
+#      └── version_X/
+#          ├── checkpoints/       <-- [vendor_fixed_subdirs.checkpoints]
+#          └── predictions/       <-- [vendor_fixed_subdirs.results]
+#

@@ -1,0 +1,167 @@
+version: 2
+
+models:
+  - name: stg_telemetry
+    description: >
+      Bronze staging layer. One row per sample point (approx 1s) of engine operation.
+      Reads raw N-CMAPSS Parquet telemetry from the Hive-partitioned lake.
+      Includes surrogate keys for uniqueness and audit metadata for traceability.
+      Grain: 1 row = 1 telemetry point (dataset_id, unit_id, cycle_num, row_index).
+
+    columns:
+      # ── Keys & Audit ────────────────────────────────────────────────────
+      - name: telemetry_id
+        description: "Primary Key: MD5 hash of (dataset_id, unit_id, cycle_num, row_index)."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: _source_file
+        description: "Path to the source Parquet file in the telemetry lake."
+
+      - name: _ingested_at
+        description: "Timestamp when the record was processed by dbt/DuckDB."
+
+      # ── Administrative / Keys ──────────────────────────────────────────
+      - name: dataset_id
+        description: >
+          Source dataset identifier (e.g., 'N-CMAPSS_DS04'). Maps to one of 9
+          experimental configurations differing in flight class mix and failure modes.
+          Used as the join key to the fuel_prices seed for regional pricing.
+        data_tests:
+          - not_null
+
+      - name: unit_id
+        description: Engine unit number within the dataset (integer ID, not globally unique — combine with dataset_id for a fleet-unique key).
+        data_tests:
+          - not_null
+
+      - name: cycle_num
+        description: >
+          Flight cycle counter starting at 1 (fresh engine) and incrementing to EOL.
+          Each cycle = one complete flight. Combined with dataset_id + unit_id forms the
+          primary cycle key used in fct_engine_health_per_cycle.
+        data_tests:
+          - not_null
+
+      - name: data_split
+        description: Data partition — 'dev' for training data, 'test' for held-out evaluation set.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['dev', 'test']
+
+      - name: rul
+        description: >
+          Remaining Useful Life in cycles. Target variable for ML models.
+          0 = engine failed this cycle. Max observed = 99. Decreases monotonically
+          within a unit's lifecycle.
+        data_tests:
+          - not_null
+
+      # ── Flight Descriptors ──────────────────────────────────────────────
+      - name: flight_class
+        description: >
+          Mission profile: 1 = Short haul (~646 km / 349 nm), 2 = Medium haul
+          (~1501 km / 810 nm), 3 = Long haul (~2588 km / 1397 nm). Calculated from
+          dataset structure, not from sensor data. Short-haul engines degrade
+          ~3.5× faster per flight-hour than long-haul due to more frequent
+          high-thrust climb cycles.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3]
+
+      - name: health_state
+        description: >
+          Degradation regime flag. 0 = normal (linear) degradation phase,
+          1 = abnormal (accelerated) degradation phase. Transition point (t_s) is
+          stochastic and varies by unit. Useful as a supervised label for
+          anomaly detection models.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+      - name: altitude_ft
+        description: >
+          Aircraft altitude in feet. Range in dataset: 3,001–35,033 ft.
+          Ground operations (alt < 3,000 ft) are excluded by the simulator —
+          no take-off or landing phases exist. Affects ISA corrections theta/delta.
+
+      - name: mach_number
+        description: >
+          True Mach number at the fan inlet. Range: ~0.0003–0.75.
+          Values near 0 occur during climb transitions. Used with T2 to derive
+          static temperature (Ts) and True Airspeed (TAS) in the Silver layer.
+
+      - name: throttle_pct
+        description: >
+          Throttle Resolver Angle (TRA) as a percentage. Max observed: ~88.7%.
+          Note: full take-off thrust (100%) is not present in this dataset.
+          High-thrust proxy: throttle_pct > 85%.
+
+      - name: t2_inlet_temp_r
+        description: >
+          Total temperature at the fan inlet in Rankine. Ranges 421–535°R
+          across all altitudes. ISA reference: 518.67°R at sea level.
+          Core input for theta = T2/518.67 (ISO normalization) and dynamic
+          fuel density ρ(T2) in the Silver layer.
+        data_tests:
+          - not_null
+
+      # ── Physical Sensors ────────────────────────────────────────────────
+      - name: wf_fuel_flow_pps
+        description: >
+          Mass fuel flow rate in pounds per second (pps). Range: 0.29–5.82 pps.
+          Core metric for SFC calculation and P&L analysis.
+          Must be divided by rho_lbs_gal to get volumetric flow in GPH.
+        data_tests:
+          - not_null
+
+      - name: t48_hpt_outlet_r
+        description: >
+          Total temperature at the HPT outlet in Rankine — the dataset's analog of
+          Exhaust Gas Temperature (EGT). Key health indicator: rises as turbine
+          efficiency degrades. ISO-corrected in Silver as t48_corr_r for degradation trending.
+        data_tests:
+          - not_null
+
+      - name: ps30_hpc_static_psia
+        description: >
+          Static pressure at the HPC outlet in psia. Used in the Phi index
+          (Wf/Ps30) as NASA's stall risk proxy. Rising Phi signals compressor
+          approaching the surge line.
+        data_tests:
+          - not_null
+
+      - name: p2_inlet_psia
+        description: >
+          Total pressure at fan inlet in psia. ISA reference: 14.696 psia at sea level.
+          Core input for delta = P2/14.696 (ISO normalization factor).
+        data_tests:
+          - not_null
+
+      # ── Health Parameters (Theta group — Transition signals) ────────────
+      - name: hpc_eff_mod
+        description: >
+          HPC efficiency modifier — delta from nominal (0.0 = no degradation,
+          negative = efficiency loss). Primary compressor health indicator per NASA
+          C-MAPSS spec. Typical EOL range: -0.01 to -0.03. Used as the key
+          "Transition" parameter in health trend analysis.
+
+      - name: hpt_eff_mod
+        description: >
+          HPT efficiency modifier. Central parameter in Failure Mode 1 (HPT-only
+          degradation, units 2/5/10 across datasets) and Failure Mode 2
+          (combined HPT+LPT, units 11/14/15/16/18/20).
+
+      - name: sm_hpc
+        description: >
+          HPC Stall Margin — virtual sensor quantifying compressor surge buffer.
+          Nominal range: 27–30. Safety alert fires if value falls below 85% of
+          the unit's cycle-1 nominal (sm_hpc_ratio < 0.85), per NASA C-MAPSS
+          operational limits (15% minimum HPC stall margin).

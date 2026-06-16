@@ -1,0 +1,190 @@
+# ============================================================================
+# Basiskonfiguration: Omnichannel Commerce Data Platform
+# Zweck: Zentrale Konfiguration fuer alle Quellen, Warehouse und Orchestrierung
+# Wird von dev.yaml und prod.yaml per Deep-Merge ueberschrieben
+# ============================================================================
+
+# --- Projektmetadaten ---
+project:
+  name: omnichannel-commerce-data-platform
+  domain: omnichannel-commerce
+  use_case: omnichannel commerce analytics and customer behavior modeling
+
+# --- Runtime-Einstellungen ---
+runtime:
+  timezone: Europe/Berlin
+  environment: dev
+
+# --- Storage-Pfade (Bronze/Silver/Gold-Schichten) ---
+storage:
+  bronze_path: storage/bronze          # Rohdaten-Artefakte pro Quelle und Batch
+  silver_path: storage/silver          # (vorbereitet fuer spaetere Nutzung)
+  gold_path: storage/gold              # Spark-Output (z.B. Parquet-Sessions)
+  checkpoint_path: storage/checkpoints # Replay-Checkpoints und Quality-Reports
+  object_store: local                  # "local" oder "gcs" (prod)
+
+# ============================================================================
+# Datenquellen-Konfiguration
+# ============================================================================
+sources:
+
+  # --- Olist: Batch-relationale Commerce-Daten ---
+  # 5 CSV-Tabellen (Orders, Items, Customers, Products, Payments)
+  # Lokal: deterministische Seed-Generierung wenn keine CSV-Dateien vorhanden
+  olist:
+    provider: kaggle
+    dataset: olistbr/brazilian-ecommerce
+    access_mode: kaggle_api_or_manual_download
+    kaggle_credentials_env:
+      username: KAGGLE_USERNAME
+      key: KAGGLE_KEY
+    source_kind: batch_relational
+    extract_mode: full_refresh
+    landing_path: storage/bronze/olist/
+    raw_schema: raw
+    tables:
+      - olist_orders
+      - olist_order_items
+      - olist_customers
+      - olist_products
+      - olist_order_payments
+
+  # --- Retailrocket: Clickstream-Events fuer Replay ---
+  # Events werden aus JSONL gelesen, normalisiert und auf Kafka-Topics geroutet
+  retailrocket:
+    provider: kaggle
+    dataset: retailrocket/ecommerce-dataset
+    access_mode: kaggle_api_or_manual_download
+    kaggle_credentials_env:
+      username: KAGGLE_USERNAME
+      key: KAGGLE_KEY
+    source_kind: clickstream_replay
+    replay_source: data/sample/streaming/retailrocket_events.jsonl
+    topic_namespace: retailrocket.events
+    raw_topic: retailrocket.events.raw           # Alle Events ungefiltert
+    event_topics:                                 # Typspezifisches Routing
+      view: retailrocket.events.view
+      addtocart: retailrocket.events.addtocart
+      transaction: retailrocket.events.transaction
+      default: retailrocket.events.dlq            # Dead Letter Queue fuer unbekannte Typen
+    event_types:
+      - view
+      - addtocart
+      - transaction
+    consumer_group: retailrocket-replay-dev
+    checkpoint_path: storage/checkpoints/retailrocket/
+    session_gap_minutes: 30                       # Inaktivitaetsluecke fuer Sessionisierung
+
+  # --- Open Food Facts: Produkt-API (JSON) ---
+  # Ruft echte Produktdaten per Barcode ab (z.B. Nutella, Coca-Cola)
+  open_food_facts:
+    provider: open-food-facts
+    source_kind: product_api_json
+    base_url: https://world.openfoodfacts.org
+    endpoint_template: /api/v2/product/{code}.json
+    landing_path: storage/bronze/open_food_facts/products/
+    raw_collection: open_food_facts_products_raw
+    product_codes:                                # Konfigurierte Barcodes
+      - "3017620422003"                           # Nutella
+      - "5449000000996"                           # Coca-Cola
+      - "7622210449283"                           # Oreo
+      - "3274080005003"                           # Evian
+    fields:
+      - code
+      - product_name
+      - brands
+      - categories
+      - image_front_url
+      - ecoscore_grade
+    user_agent: omnichannel-commerce-data-platform/0.1 (https://github.com/Abdou240/omnichannel-commerce-data-platform)
+
+  # --- Open-Meteo: Wetter-Enrichment (Tagesebene) ---
+  # Temperatur und Niederschlag fuer brasilianische Staedte (2018)
+  open_meteo:
+    provider: open-meteo
+    source_kind: weather_enrichment_api
+    base_url: https://archive-api.open-meteo.com
+    endpoint: /v1/archive
+    landing_path: storage/bronze/open_meteo/weather/
+    raw_collection: open_meteo_weather_raw
+    start_date: 2018-01-01
+    end_date: 2018-12-31
+    daily_metrics:
+      - temperature_2m_mean
+      - precipitation_sum
+
+  # --- Frankfurter API v2: Wechselkurse ---
+  # EUR->USD und EUR->BRL fuer Betragsumrechnung (2018)
+  frankfurter:
+    provider: frankfurter
+    source_kind: fx_rates_api
+    base_url: https://api.frankfurter.dev
+    endpoint: /v2/rates
+    landing_path: storage/bronze/frankfurter/fx/
+    raw_collection: frankfurter_fx_raw
+    start_date: 2018-01-01
+    end_date: 2018-12-31
+    base_currency: EUR
+    quote_currencies:
+      - USD
+      - BRL
+
+# ============================================================================
+# MongoDB Raw-Document-Store
+# ============================================================================
+# Speichert JSON-Payloads als Rohdokumente (optional, graceful skip wenn nicht erreichbar)
+raw_document_store:
+  engine: mongodb
+  database: commerce_raw
+  collections:
+    retailrocket_events: retailrocket_events_raw
+    open_food_facts_products: open_food_facts_products_raw
+    open_meteo_weather: open_meteo_weather_raw
+    frankfurter_fx: frankfurter_fx_raw
+
+# ============================================================================
+# Warehouse-Konfiguration
+# ============================================================================
+warehouse:
+  # --- Lokales Warehouse (PostgreSQL) ---
+  local:
+    engine: postgres
+    database: commerce_platform
+    schemas:
+      raw: raw             # Rohdaten-Landing
+      staging: staging     # dbt Staging + Intermediate + Marts
+      marts: marts         # (logisch, physisch in staging-Schema)
+
+  # --- Cloud-Warehouse (BigQuery, Zielarchitektur) ---
+  cloud:
+    engine: bigquery
+    location: US           # Kompatibel mit Public Datasets
+    datasets:
+      raw: commerce_raw
+      staging: commerce_staging
+      marts: commerce_marts
+    public_datasets:
+      ga4_sample_ecommerce:
+        project: bigquery-public-data
+        dataset: ga4_obfuscated_sample_ecommerce
+        location: US
+        reference_pattern: events_*
+      thelook_ecommerce:
+        project: bigquery-public-data
+        dataset: thelook_ecommerce
+        location: US
+        reference_tables:
+          - orders
+          - order_items
+          - products
+          - users
+
+  dbt_project_dir: warehouse/dbt
+  target: dev
+
+# ============================================================================
+# Orchestrierung
+# ============================================================================
+orchestration:
+  engine: kestra
+  namespace: omnichannel.platform.dev

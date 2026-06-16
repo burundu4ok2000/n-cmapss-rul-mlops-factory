@@ -1,0 +1,366 @@
+version: 2
+
+models:
+  - name: fct_engine_health_per_cycle
+    config:
+      contract:
+        enforced: true
+    description: >
+      Gold fact table. One row per flight cycle for each engine unit (7,473 rows total
+      for all 99 engines across 9 datasets). Aggregates per-second normalized telemetry
+      into cycle-level KPIs spanning four analytical dimensions:
+      (1) Transition — internal health parameters (HPC/HPT efficiency modifiers),
+      (2) Observation — sensor symptoms (EGT margin erosion, stall margin ratio),
+      (3) Efficiency — SFC degradation delta and fuel per nautical mile,
+      (4) Lifecycle context — cycle position as lifecycle_pct (0–100%).
+      PK: engine_cycle_pk (MD5 hash).
+    
+    # ── Unified Semantic Layer ──────────────────────────────────────
+    semantic_model:
+      enabled: true
+    agg_time_dimension: flight_date
+
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "lifecycle_pct between 1.0 and 100.0"
+          description: >
+            Lifecycle percentage must be between 1% and 100%.
+            A value outside this range indicates a join error between cycle_agg
+            and engine_lifecycle CTEs in the model.
+
+    columns:
+      - name: engine_cycle_pk
+        data_type: varchar
+        description: Surrogate primary key (MD5 hash) combining dataset_id, unit_id, and cycle_num. Verified unique.
+        entity:
+          type: primary
+          name: engine_cycle
+        data_tests:
+          - unique
+          - not_null
+
+      - name: dataset_id
+        data_type: varchar
+        description: Source dataset identifier. Foreign key to the fuel_prices seed for regional pricing in the P&L report.
+        entity:
+          type: foreign
+          name: dataset
+        data_tests:
+          - not_null
+
+      - name: unit_id
+        data_type: integer
+        description: Engine unit number. Not globally unique — always use with dataset_id.
+        data_tests:
+          - not_null
+
+      - name: cycle_num
+        data_type: integer
+        description: Flight cycle number (1 = fresh engine). Monotonically increasing per unit up to total_cycles (EOL).
+        dimension:
+          type: categorical
+        data_tests:
+          - not_null
+
+      - name: flight_date
+        data_type: date
+        description: Synthetic flight date for time-series analysis (base 2024-01-01).
+        granularity: day
+        dimension:
+          type: time
+
+      - name: total_cycles
+        data_type: integer
+        description: Total number of cycles for this engine unit until EOL.
+
+      - name: lifecycle_pct
+        data_type: double
+        description: Current cycle expressed as a percentage of the engine's total lifetime (cycle_num / total_cycles × 100). 1.0 = first flight, 100.0 = last flight before failure.
+        data_tests:
+          - not_null
+
+      - name: flight_class
+        data_type: integer
+        description: Dominant flight class for the cycle (1/2/3).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3]
+
+      - name: health_state
+        data_type: integer
+        description: Binary health state (1 = healthy, 2 = degradation started).
+
+      - name: rul_at_cycle_end
+        data_type: integer
+        description: Remaining Useful Life at the end of this cycle. 0 = engine failed.
+
+      # ── Transition: Health Parameters ─────────────────────────────────
+      - name: avg_hpc_eff_mod
+        data_type: double
+        description: >
+          Cycle-average HPC efficiency modifier (delta from nominal 0.0).
+          Observed EOL range: -0.001 to -0.025. Values more negative than -0.01
+          indicate significant compressor fouling or blade erosion. This is the
+          primary "internal" (Transition) degradation signal per NASA C-MAPSS spec.
+
+      - name: avg_hpt_eff_mod
+        data_type: double
+        description: >
+          Cycle-average HPT efficiency modifier. Key indicator for Failure Mode 1
+          (HPT-only degradation) and Failure Mode 2 (combined HPT+LPT). Engines with
+          accelerated HPT degradation show steeper negative trends after the stochastic
+          transition point t_s (tracked via health_state = 1 in staging).
+
+      - name: avg_lpt_eff_mod
+        data_type: double
+        description: Cycle-average LPT efficiency modifier.
+
+      - name: min_hpc_eff_mod
+        data_type: double
+        description: Minimum HPC efficiency modifier observed within the cycle — captures worst-case efficiency during high-load segments (e.g., climb). More sensitive to acute degradation events than the cycle average.
+
+      # ── Observation: EGT / T48 ────────────────────────────────────────
+      - name: peak_t48_corr_r
+        data_type: double
+        description: >
+          Maximum ISO-corrected HPT outlet temperature (T48/theta) within the cycle in Rankine.
+          Represents the worst-case thermal stress the engine experienced this flight.
+          FADEC limit threshold: ~1950°R. Sustained exceedances require inspection.
+
+      - name: egt_margin_erosion_r
+        data_type: double
+        description: >
+          Peak T48_corr for this cycle minus the engine's own peak T48_corr in cycle 1.
+          Positive and growing = engine running hotter to produce the same thrust = wear.
+          Negative = engine is running on an easier route than its first cycle (expected
+          early in lifecycle). Alert if > +50°R. Observed fleet maximum: +93°R.
+
+      # ── Safety: Stall Margin ────────────────────────────────────────
+      - name: avg_sm_hpc
+        data_type: double
+        description: Cycle-average HPC Stall Margin from the virtual sensor. Nominal range 27–30. Declining trend signals progressive compressor stage deterioration.
+
+      - name: min_sm_hpc
+        data_type: double
+        description: Minimum HPC Stall Margin within the cycle — captures the worst-case stall proximity during the highest-load flight phase (typically climb or go-around maneuvers).
+
+      - name: sm_hpc_ratio
+        data_type: double
+        description: >
+          Minimum SmHPC for this cycle divided by the engine's own nominal SmHPC (avg of first 5 cycles).
+          Safety threshold: < 0.85 = CRITICAL (less than 15% stall margin remaining, per NASA C-MAPSS).
+          Values < 0.90 = WARNING. Used as the primary stall risk flag in rpt_safety_alerts.
+
+      - name: avg_phi_index
+        data_type: double
+        description: Cycle-average Phi index (Wf / Ps30). Rising trend at constant TRA confirms HPC degradation independently of the virtual sensor SmHPC.
+
+      # ── Efficiency: SFC & Fuel ────────────────────────────────────────
+      - name: actual_sfc
+        data_type: double
+        description: >
+          Actual Specific Fuel Consumption for this cycle.
+          Formula: mean(Wf / TRA). Mass-flow basis (pps / %).
+          Increases as engine degrades and requires more fuel per unit thrust.
+
+      - name: baseline_sfc
+        data_type: double
+        description: Nominal SFC for this engine unit — average over the first 5 cycles. Serves as the "healthy engine" reference for degradation delta calculation.
+
+      - name: sfc_delta
+        data_type: double
+        description: actual_sfc minus baseline_sfc. Positive values indicate excess fuel burn above the engine's own healthy baseline. The direct input to excess_gallons calculation in rpt_engine_pnl.
+
+      - name: sfc_pct_degradation
+        data_type: double
+        description: SFC delta as a percentage of baseline_sfc. Industry benchmark — airlines typically trigger maintenance review at +5%, mandatory inspection at +8%.
+
+      - name: total_wf_gal
+        data_type: double
+        description: Total Jet-A fuel consumed this cycle in gallons, computed using the dynamic density ρ(T2) for each second. More accurate than using the standard 6.7 lbs/gal constant by up to 2.87%.
+
+      - name: total_wf_liters
+        data_type: double
+        description: "Total fuel volume in liters (SI conversion)."
+
+      - name: excess_gallons
+        data_type: double
+        description: "Total fuel burned in excess of engine baselines (gallons). Derived from SFC delta."
+
+      - name: market_penalty_usd
+        data_type: double
+        description: "Financial impact of engine degradation valued at EIA spot market prices (USD)."
+
+      # ── Distance & Efficiency per NM ────────────────────────────────
+      - name: total_dist_nm
+        data_type: double
+        description: Total flight distance in Nautical Miles for this cycle, summed from 1-second TAS increments. Short-haul (Fc=1) ≈ 349 nm, Medium ≈ 810 nm, Long ≈ 1,397 nm.
+
+      - name: total_dist_km
+        data_type: double
+        description: Total flight distance in kilometers (total_dist_nm × 1.852). Provided alongside nm for SI-system users.
+
+      - name: fuel_kg_per_100nm
+        data_type: double
+        description: >
+          Fuel efficiency KPI: kilograms of Jet-A burned per 100 nautical miles.
+          Computed only for cycles with total_dist_nm > 10 nm to avoid near-zero
+          distance artifacts. Null for cycles where distance is negligible.
+          A rising trend across cycles at the same flight_class reveals true
+          aerodynamic/thermodynamic efficiency loss, independent of routing differences.
+
+      - name: avg_alt_ft
+        data_type: double
+        description: Average altitude for the cycle in feet.
+
+      - name: avg_mach
+        data_type: double
+        description: Average Mach number for the cycle.
+
+    # ── Derived Metrics (Semantic Layer) ──────────────────────────────
+    metrics:
+      - name: fleet_excess_gallons
+        description: "Total fuel burned in excess of engine baselines across the fleet (gallons)."
+        type: simple
+        label: "Excess Fuel (Gal)"
+        agg: sum
+        expr: excess_gallons
+
+      - name: fleet_market_penalty_usd
+        description: "Total financial impact of engine degradation valued at EIA spot prices."
+        type: simple
+        label: "Financial Penalty (USD)"
+        agg: sum
+        expr: market_penalty_usd
+
+      - name: total_dist_nm_sum
+        description: "Total flight distance in Nautical Miles."
+        type: simple
+        label: "Total Distance (NM)"
+        agg: sum
+        expr: total_dist_nm
+
+  - name: rpt_engine_pnl
+    description: >
+      Financial P&L vitrine. One row per (dataset_id, unit_id, cycle_num).
+      Calculates the economic cost of engine degradation using the Opportunity Cost
+      principle: excess fuel burned is valued at the EIA spot price (marginal replacement cost),
+      not the hedged contract price. This reflects the true market cost of inefficiency
+      regardless of the airline's hedging position. A second metric (actual_cash_penalty_usd)
+      uses the hedged price where available via COALESCE, for internal cost accounting.
+      Joins fct_engine_health_per_cycle with the fuel_prices seed (9 regional price points).
+
+    columns:
+      - name: engine_cycle_pk
+        description: Inherited PK from fct_engine_health_per_cycle. One row per engine-cycle.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: region_label
+        description: Human-readable regional label from the fuel_prices seed (e.g., 'Europe Short'). Maps dataset_id to a plausible airport region for pricing context.
+
+      - name: flight_date
+        description: Synthetic flight date for the cycle.
+
+      - name: lifecycle_pct
+        description: Engine lifecycle percentage (0-100%).
+
+      - name: flight_class
+        description: Flight class (1/2/3).
+
+      - name: rul_at_cycle_end
+        description: Remaining Useful Life at the end of the cycle.
+
+      - name: excess_gallons
+        description: >
+          Volume of fuel burned in excess of the engine's healthy baseline for this cycle,
+          in gallons. Computed as (sfc_delta / actual_sfc) × total_wf_gal.
+          Negative or zero values (engine performing at or below baseline) are set to 0 —
+          we only account for loss, not gain (conservative P&L).
+
+      - name: market_penalty_usd
+        description: >
+          Primary financial KPI. excess_gallons × EIA spot price for the engine's region.
+          Represents the market Opportunity Cost: the monetary value of fuel wasted due to
+          degradation, valued at today's replacement price. Independent of hedging strategy —
+          designed to be presented to CFO/board as a benchmark inefficiency index.
+        data_tests:
+          - not_null
+
+      - name: actual_cash_penalty_usd
+        description: >
+          Internal cost accounting version: excess_gallons × COALESCE(hedged_price, eia_spot_price).
+          Uses the airline's actual contracted fuel price when available.
+          Suitable for budget vs. actuals reporting in the airline's finance system.
+
+      - name: market_penalty_usd_annualized
+        description: >
+          market_penalty_usd scaled to a full year of operations assuming:
+          Fc=1 (short haul) → 730 cycles/year (2/day), Fc=2 → 365, Fc=3 → 260.
+          Converts per-cycle losses into annual fleet cost for executive reporting.
+          Fleet top offenders regularly exceed $1M/year in annualized fuel waste.
+
+  - name: rpt_safety_alerts
+    description: >
+      Safety monitoring vitrine. One row per (dataset_id, unit_id) — fleet-level view.
+      Aggregates EOL health metrics (last 20% of lifecycle) and compares against
+      FADEC limit thresholds from the NASA C-MAPSS paper.
+      Outputs a composite alert_priority score (0–10) and a human-readable alert_level
+      (CRITICAL / WARNING / MONITOR / NOMINAL) for each engine unit.
+      Primary use: daily fleet health dashboard and maintenance scheduling input.
+
+    columns:
+      - name: alert_priority
+        description: >
+          Composite safety score (0–10). Weighted sum of three breach indicators:
+          EGT limit (T48_corr > 1950°R) = +3 pts, Stall margin (ratio < 0.85) = +4 pts,
+          SFC inefficiency (> 8%) = +2 pts, EGT erosion (> 80°R) = +1 pt.
+          Score > 7 = CRITICAL (immediate grounding review recommended).
+
+      - name: alert_level
+        description: >
+          Human-readable triage level derived from alert_priority and individual flags.
+          CRITICAL = stall margin < 0.85 OR peak T48 > 1950°R (fail-safe triggers).
+          WARNING = stall margin < 0.90 OR T48 > 1920°R.
+          MONITOR = SFC degradation > 5%.
+          NOMINAL = no breaches detected.
+          In the current fleet, all engines reach WARNING or CRITICAL at EOL by design
+          (N-CMAPSS simulates run-to-failure scenarios).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['CRITICAL', 'WARNING', 'MONITOR', 'NOMINAL']
+
+      - name: flag_stall_risk
+        description: >
+          Boolean. True if the engine's minimum SmHPC ratio (eol_min_sm_hpc_ratio) in the
+          last 20% of its lifecycle drops below 0.85 — indicating less than 15% stall margin
+          remaining vs. the unit's own healthy baseline. Threshold per NASA C-MAPSS operational
+          limits. Treat as a P0 safety flag — triggers immediate borescope inspection.
+        data_tests:
+          - not_null
+
+      - name: flag_egt_limit
+        description: >
+          Boolean. True if peak ISO-corrected T48 exceeds 1950°R in EOL phase.
+          Maps to FADEC over-temperature limit protection logic (NASA paper, Table 1).
+          Sustained exceedances above this threshold indicate hot-section material
+          degradation and potential HPT blade oxidation.
+        data_tests:
+          - not_null
+
+      - name: eol_min_sm_hpc_ratio
+        description: >
+          Minimum ratio of SmHPC to the engine's own cycle-1 nominal,
+          measured in the last 20% of lifecycle. Values below 0.85 trigger flag_stall_risk.
+          Lowest observed in fleet: 0.855 (DS08c Unit 7).
+
+      - name: egt_erosion_r
+        description: >
+          Average EGT margin erosion in degrees Rankine (EOL phase vs. the engine's cycle-1 baseline).
+          Positive = running hotter. Fleet worst case: DS03 Unit 8 (+93 degR).
+          Maintenance review threshold: +50 degR.

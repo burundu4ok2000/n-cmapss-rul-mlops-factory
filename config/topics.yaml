@@ -1,0 +1,44 @@
+# ============================================================================
+# Kafka/Redpanda Topic-Katalog (Config-Referenz)
+# Zweck: Definiert alle 5 Retailrocket-Topics mit Partitionen und Retention
+# Wird von kafka/create_topics.sh gelesen
+# ============================================================================
+
+topics:
+  # --- Raw-Topic: Alle Events ungefiltert (3 Tage Retention) ---
+  - name: retailrocket.events.raw
+    partitions: 3
+    replication_factor: 1
+    cleanup_policy: delete
+    retention_ms: 259200000        # 3 Tage
+
+  # --- Typspezifische Topics (3 Tage Retention, 6 Partitionen fuer Parallelitaet) ---
+  - name: retailrocket.events.view
+    partitions: 6
+    replication_factor: 1
+    cleanup_policy: delete
+    retention_ms: 259200000        # 3 Tage
+
+  - name: retailrocket.events.addtocart
+    partitions: 6
+    replication_factor: 1
+    cleanup_policy: delete
+    retention_ms: 259200000        # 3 Tage
+
+  - name: retailrocket.events.transaction
+    partitions: 6
+    replication_factor: 1
+    cleanup_policy: delete
+    retention_ms: 259200000        # 3 Tage
+
+  # --- Dead Letter Queue: Unbekannte Event-Typen (14 Tage Retention) ---
+  - name: retailrocket.events.dlq
+    partitions: 3
+    replication_factor: 1
+    cleanup_policy: delete
+    retention_ms: 1209600000       # 14 Tage
+
+todo:
+  - "Increase replication_factor in managed environments."
+  - "Add schema registry compatibility and event versioning before publishing production traffic."
+  - "Decide whether to preserve the raw replay topic permanently or only keep typed event topics."

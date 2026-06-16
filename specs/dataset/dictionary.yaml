@@ -1,0 +1,76 @@
+# ==============================================================================
+# N-CMAPSS Data Dictionary
+# Version: 1.0.0
+# Description: Central metadata for the turbofan engine degradation dataset.
+# Total Columns: 49
+# ==============================================================================
+
+groups:
+  W:
+    description: "Scenario Descriptors (Operative Conditions)"
+    columns:
+      alt: { unit: "ft", description: "Altitude" }
+      Mach: { unit: "-", description: "Flight Mach number" }
+      TRA: { unit: "%", description: "Throttle-resolver angle" }
+      T2: { unit: "°R", description: "Total temperature at fan inlet" }
+
+  Xs:
+    description: "Physical Sensor Measurements"
+    columns:
+      Wf: { unit: "pps", description: "Fuel flow" }
+      Nf: { unit: "rpm", description: "Physical fan speed" }
+      Nc: { unit: "rpm", description: "Physical core speed" }
+      T24: { unit: "°R", description: "Total temperature at LPC outlet" }
+      T30: { unit: "°R", description: "Total temperature at HPC outlet" }
+      T48: { unit: "°R", description: "Total temperature at HPT outlet" }
+      T50: { unit: "°R", description: "Total temperature at LPT outlet" }
+      P15: { unit: "psia", description: "Total pressure in bypass-duct" }
+      P2: { unit: "psia", description: "Total pressure at fan inlet" }
+      P21: { unit: "psia", description: "Total pressure at fan outlet" }
+      P24: { unit: "psia", description: "Total pressure at LPC outlet" }
+      Ps30: { unit: "psia", description: "Static pressure at HPC outlet" }
+      P40: { unit: "psia", description: "Total pressure at burner outlet" }
+      P50: { unit: "psia", description: "Total pressure at LPT outlet" }
+
+  Xv:
+    description: "Virtual Sensors (Unobserved Estimates)"
+    columns:
+      T40: { unit: "°R", description: "Total temp. at burner outlet" }
+      P30: { unit: "psia", description: "Total pressure at HPC outlet" }
+      P45: { unit: "psia", description: "Total pressure at HPT outlet" }
+      W21: { unit: "pps", description: "Fan flow" }
+      W22: { unit: "lbm/s", description: "Flow out of LPC" }
+      W25: { unit: "lbm/s", description: "Flow into HPC" }
+      W31: { unit: "lbm/s", description: "HPT coolant bleed" }
+      W32: { unit: "lbm/s", description: "HPT coolant bleed (LPT case)" }
+      W48: { unit: "lbm/s", description: "Flow out of HPT" }
+      W50: { unit: "lbm/s", description: "Flow out of LPT" }
+      SmFan: { unit: "-", description: "Fan stall margin" }
+      SmLPC: { unit: "-", description: "LPC stall margin" }
+      SmHPC: { unit: "-", description: "HPC stall margin" }
+      phi: { unit: "pps/psi", description: "Ratio of fuel flow to Ps30" }
+
+  Theta:
+    description: "Health Parameters (Degradation Modifiers)"
+    columns:
+      fan_eff_mod: { unit: "-", description: "Fan efficiency modifier" }
+      fan_flow_mod: { unit: "-", description: "Fan flow modifier" }
+      LPC_eff_mod: { unit: "-", description: "LPC efficiency modifier" }
+      LPC_flow_mod: { unit: "-", description: "LPC flow modifier" }
+      HPC_eff_mod: { unit: "-", description: "HPC efficiency modifier" }
+      HPC_flow_mod: { unit: "-", description: "HPC flow modifier" }
+      HPT_eff_mod: { unit: "-", description: "HPT efficiency modifier" }
+      HPT_flow_mod: { unit: "-", description: "HPT flow modifier" }
+      LPT_eff_mod: { unit: "-", description: "LPT efficiency modifier" }
+      LPT_flow_mod: { unit: "-", description: "LPT flow modifier" }
+
+  Auxiliary:
+    description: "Administrative & Target Columns"
+    columns:
+      unit: { unit: "ID", description: "Engine unit identifier" }
+      cycle: { unit: "cycle", description: "Flight cycle number" }
+      Fc: { unit: "class", description: "Flight Class (1: Short, 2: Med, 3: Long)" }
+      hs: { unit: "-", description: "Health state indicator" }
+      RUL: { unit: "cycle", description: "Remaining Useful Life (Target)" }
+      dataset: { unit: "name", description: "Source dataset (e.g., DS02-006)" }
+      split: { unit: "type", description: "Data split (dev/test)" }

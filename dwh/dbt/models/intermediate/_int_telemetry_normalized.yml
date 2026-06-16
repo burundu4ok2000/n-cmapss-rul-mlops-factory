@@ -1,0 +1,130 @@
+version: 2
+
+models:
+  - name: int_telemetry_normalized
+    description: >
+      Silver transformation layer. Extends stg_telemetry with physics-based derived columns.
+      Same grain as staging (1 row = 1 second), but adds 12 computed fields:
+      ISO correction factors (theta, delta), corrected temperatures/flow/speed,
+      dynamic Jet-A fuel density ρ(T2), volumetric flow in GPH, True Airspeed (TAS),
+      and per-second distance in Nautical Miles.
+      No columns are removed — all staging columns pass through unchanged.
+      Reference: NASA C-MAPSS paper (20080043619), ISA standard atmosphere.
+
+    columns:
+      # ── ISO Correction Factors ────────────────────────────────────────
+      - name: theta
+        description: >
+          ISA temperature correction factor: theta = T2 / 518.67.
+          Observed range: 0.81–1.03 (ISA reference = 1.0 at sea level, 15°C).
+          Values < 1.0 indicate cold air at altitude; values > 1.0 are warm ground-level ops.
+          Dividing raw sensor readings by theta removes atmospheric noise from health trends.
+        data_tests:
+          - not_null
+
+      - name: delta
+        description: >
+          ISA pressure correction factor: delta = P2 / 14.696.
+          Decreases monotonically with altitude. At 35,000 ft, delta ≈ 0.24.
+          Used alongside theta to normalize fuel flow and speeds.
+        data_tests:
+          - not_null
+
+      # ── Corrected Temperatures ──────────────────────────────────────────
+      - name: t48_corr_r
+        description: >
+          ISO-corrected HPT outlet temperature: T48_corr = T48 / theta.
+          Removes the "cold air at altitude" masking effect that hides EGT increases.
+          Without this correction, T48 appears to drop at EOL because engines fly higher —
+          t48_corr_r reveals the true thermal degradation trend (+60–90°R over lifecycle).
+        data_tests:
+          - not_null
+
+      - name: t30_corr_r
+        description: >
+          ISO-corrected HPC outlet temperature: T30_corr = T30 / theta.
+          Sensitive to HPC efficiency loss — rises as the compressor degrades
+          and fails to cool the air stream efficiently.
+        data_tests:
+          - not_null
+
+      # ── Corrected Flow & Speed ──────────────────────────────────────────
+      - name: wf_corr_pps
+        description: >
+          ISO-corrected fuel flow: Wf_corr = Wf / (delta × sqrt(theta)).
+          The gold-standard metric for comparing engine fuel burn across altitudes.
+          An upward trend in wf_corr_pps at constant TRA is definitive evidence
+          of thermodynamic efficiency loss, independent of weather or routing.
+        data_tests:
+          - not_null
+
+      - name: nf_corr_rpm
+        description: >
+          ISO-corrected fan speed: Nf_corr = Nf / sqrt(theta).
+          Allows fan speed comparison across thermal conditions.
+
+      # ── Fuel Density & Volumetric Flow ──────────────────────────────────
+      - name: rho_lbs_gal
+        description: >
+          Dynamic Jet-A fuel density in lbs/gallon, computed as:
+          rho = 6.7 - 0.0031 × (T_static_Fahrenheit - 60).
+          Uses Static Air Temperature (SAT) instead of T2 to avoid Ram Rise bias
+          (up to 30°F at high Mach), ensuring accurate volumetric accounting.
+          Clamped between 6.4 and 7.1 lbs/gal for safety.
+          Observed range in dataset: 6.65–7.00 lbs/gal.
+        data_tests:
+          - not_null
+
+      - name: a_fps
+        description: >
+          Speed of sound in feet per second (ft/s) at current altitude.
+          Calculated as: a = 49.021 * SQRT(T_static).
+          This is a Dry Air Approximation (ISA standard).
+          Pre-calculated in the intermediate layer to optimize performance
+          of downstream TAS and distance metrics.
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "a_fps > 500 and a_fps < 1200"
+
+      - name: wf_gph
+        description: >
+          Volumetric fuel flow in Gallons Per Hour: GPH = (Wf × 3600) / rho.
+          Bridges the gap between mass-based sensor data and volume-based fuel invoices.
+          Required for reconciling onboard fuel quantity sensors (measure volume)
+          with engine FADEC data (measures mass flow).
+        data_tests:
+          - not_null
+
+      - name: wf_kg_s
+        description: >
+          Fuel mass flow in kg/second (SI units).
+          Formula: Wf_kg_s = Wf x 0.453592. Useful for SI-system energy calculations.
+
+      # ── Flight Physics ─────────────────────────────────────────────────
+      - name: t_static_r
+        description: >
+          Static (ambient) air temperature in Rankine, derived from total temperature T2
+          and Mach number: Ts = T2 / (1 + 0.2 × M²). Intermediate step for TAS calculation.
+          At Mach 0.75 and T2 = 465°R, Ts ≈ 440°R (−45°C), consistent with ISA at 35,000 ft.
+
+      - name: tas_kts
+        description: >
+          True Airspeed in knots: TAS = M × (49.02 × sqrt(Ts)) / 1.68781.
+          Derived from Mach number and static temperature via ISA atmosphere model.
+          Typical cruise value: 380–430 knots. Used to compute nautical miles per cycle.
+
+      - name: dist_nm_increment
+        description: >
+          Distance traveled per 1-second telemetry sample in Nautical Miles.
+          dist_nm = TAS (fps) / 6076.12. Summed over a full cycle in the Mart layer
+          to produce total_dist_nm per flight. Null when Mach < 0.001 (taxiing proxy).
+
+      # ── Stall Risk ─────────────────────────────────────────────────────
+      - name: phi_computed
+        description: >
+          Computed Phi index: Wf / Ps30 (pps/psia). NASA's proxy for HPC stall proximity.
+          Rising phi at constant power setting signals the compressor is being pushed
+          harder to achieve the same pressure ratio, indicating stage efficiency loss.
+          Complements the virtual sensor phi column from the raw data.

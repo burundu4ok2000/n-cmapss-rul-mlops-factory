@@ -1,0 +1,81 @@
+# ==============================================================================
+# N-CMAPSS RUL Model Factory: Base Configuration
+# Purpose: Central source of truth for schema, parameters, and defaults.
+# This file is merged with dev.yaml or prod.yaml at runtime.
+# ==============================================================================
+
+project:
+  name: ncmapss-rul-mlops-factory
+  domain: aerospace-predictive-maintenance
+  use_case: turbofan-engine-remaining-useful-life-estimation
+  version: 0.1.0
+
+# ==============================================================================
+# DATASET SCHEMA (Derived from specs/dataset/dictionary.yaml)
+# ==============================================================================
+dataset:
+  name: "NASA N-CMAPSS"
+  prefix: "N-CMAPSS_"
+  
+  # Column Groups
+  groups:
+    metadata: ["unit", "cycle", "Fc", "hs"]
+    scenario: ["alt", "Mach", "TRA", "T2"]
+    physical_sensors: ["T24", "T30", "T48", "T50", "P15", "P2", "P30", "Ps30", "P45", "P50"]
+    virtual_sensors: ["T40", "P30", "P45", "W21", "W22", "W25", "W31", "W32", "W48", "W50", "SmFan", "SmLPC", "SmHPC", "phi"]
+    health_params: ["fan_eff_mod", "fan_flow_mod", "LPC_eff_mod", "LPC_flow_mod", "HPC_eff_mod", "HPC_flow_mod", "HPT_eff_mod", "HPT_flow_mod", "LPT_eff_mod", "LPT_flow_mod"]
+    targets: ["RUL"]
+
+  # Default active features for the Bayesian RUL engine
+  active_features:
+    scenario: ["alt", "Mach", "TRA", "T2"]
+    sensors: ["T24", "T30", "T48", "T50", "P15", "P2", "P30", "Ps30", "P45", "P50"]
+
+# ==============================================================================
+# TRAINING & TRANSFORMATION HYPERPARAMETERS
+# ==============================================================================
+training:
+  default_parameters:
+    window_length: 30
+    window_step: 10
+    sampling_rate: 10  # Hz/Observations
+    normalization_strategy: "Z-SCORE"
+    validation_split: 0.10
+    batch_size: 512
+    epochs: 100
+    learning_rate: 0.001
+    target_dtype: "float32"
+
+  # Dataset-specific overrides (Master Config Map)
+  dataset_configs:
+    "N-CMAPSS_DS02-006":
+      dataset_id: "DS02"
+      sampling_rate: 10
+      window_length: 30
+      window_step: 10
+      normalization_strategy: "Z-SCORE"
+
+# ==============================================================================
+# STORAGE & LOGISTICS
+# ==============================================================================
+storage:
+  root_dir: "."
+  data_dir: "data"
+  results_dir: "results"
+  checkpoints_dir: "results/checkpoints"
+  logs_dir: "results/logs"
+  
+  # Formats
+  raw_format: "hdf5"
+  intermediate_format: "parquet"
+  training_format: "lmdb"
+
+# ==============================================================================
+# SECURITY & COMPLIANCE
+# ==============================================================================
+security:
+  sterilize_checkpoints: true
+  sign_artifacts: true
+  generate_provenance: true
+  signing_method: "cosign"
+  serialization_format: "safetensors"

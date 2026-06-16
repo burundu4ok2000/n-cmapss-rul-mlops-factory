@@ -1,0 +1,31 @@
+# ==============================================================================
+# N-CMAPSS RUL Model Factory: Prod Overrides
+# Purpose: HPC/Cloud execution settings.
+# ==============================================================================
+
+runtime:
+  environment: prod
+  log_level: INFO
+
+storage:
+  # Cloud GCS paths or absolute HPC paths
+  root_dir: "/app"
+  data_dir: "/mnt/data/ncmapss"
+  results_dir: "/mnt/results"
+  object_store: gcs
+  gcs_bucket: "ncmapss-factory-artifacts"
+
+training:
+  # Production hyperparameters
+  default_parameters:
+    epochs: 100
+    batch_size: 512
+  
+  fast_forward_source: false  # Ensure fresh generation for auditability
+
+security:
+  # Strict compliance settings
+  sterilize_checkpoints: true
+  sign_artifacts: true
+  generate_provenance: true
+  serialization_format: "safetensors"

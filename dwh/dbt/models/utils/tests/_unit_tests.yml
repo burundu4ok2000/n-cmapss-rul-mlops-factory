@@ -1,0 +1,129 @@
+version: 2
+
+unit_tests:
+  - name: test_physics_engine_full_spectrum
+    description: >
+      Comprehensive validation of the aerospace physics engine. 
+      Covers ISA Sea Level (Theta=1, Delta=1), Cruise (Mach 0.8), and Ground Static (Mach 0).
+      Verified against NASA C-MAPSS thermodynamic reference points.
+    model: physics_validation
+    given:
+      - input: ref('stg_telemetry')
+        rows:
+          # Row 1: ISA Static Sea Level (Reference point)
+          - {
+              t2_inlet_temp_r: 518.67, 
+              p2_inlet_psia: 14.696, 
+              mach_number: 0.0,
+              t24_lpc_outlet_r: 550.0,
+              p24_lpc_outlet_psia: 18.0,
+              nc_core_speed_rpm: 10000.0,
+              w21_fan_flow_pps: 500.0,
+              wf_fuel_flow_pps: 2.0
+            }
+          # Row 2: Cruise at FL350 (Typical Mach 0.8)
+          - {
+              t2_inlet_temp_r: 450.0, 
+              p2_inlet_psia: 5.0, 
+              mach_number: 0.8,
+              t24_lpc_outlet_r: 480.0,
+              p24_lpc_outlet_psia: 7.0,
+              nc_core_speed_rpm: 12000.0,
+              w21_fan_flow_pps: 300.0,
+              wf_fuel_flow_pps: 1.5
+            }
+          # Row 3: Hot Day Takeoff (T2=560, P2=14.5, Mach 0.3)
+          - {
+              t2_inlet_temp_r: 560.0, 
+              p2_inlet_psia: 14.5, 
+              mach_number: 0.3,
+              t24_lpc_outlet_r: 610.0,
+              p24_lpc_outlet_psia: 20.0,
+              nc_core_speed_rpm: 9500.0,
+              w21_fan_flow_pps: 450.0,
+              wf_fuel_flow_pps: 2.5
+            }
+          # Row 4: Cold High Alt (T2=400, P2=7.0, Mach 0.5)
+          - {
+              t2_inlet_temp_r: 400.0, 
+              p2_inlet_psia: 7.0, 
+              mach_number: 0.5,
+              t24_lpc_outlet_r: 420.0,
+              p24_lpc_outlet_psia: 9.0,
+              nc_core_speed_rpm: 11000.0,
+              w21_fan_flow_pps: 250.0,
+              wf_fuel_flow_pps: 1.0
+            }
+          # Row 5: Zero Safety (Sensor Failure Simulation)
+          - {
+              t2_inlet_temp_r: 0.0, 
+              p2_inlet_psia: 0.0, 
+              mach_number: 0.0,
+              t24_lpc_outlet_r: 0.0,
+              p24_lpc_outlet_psia: 0.0,
+              nc_core_speed_rpm: 0.0,
+              w21_fan_flow_pps: 0.0,
+              wf_fuel_flow_pps: 0.0
+            }
+    expect:
+      rows:
+        # Expectations for ISA Static (Theta=1, Delta=1)
+        - {
+            theta: 1.0, 
+            delta: 1.0, 
+            t_static_r: 518.7,
+            t24_corr: 550.0,
+            p24_corr: 18.0,
+            n2_corr: 10000.0,
+            w21_corr: 500.0,
+            fuel_rho_kg_l: 0.8,
+            fuel_gph: 1074.1
+          }
+        # Expectations for Cruise (Mach 0.8, T2=450, P2=5)
+        - {
+            theta: 0.9, 
+            delta: 0.3, 
+            t_static_r: 398.9,
+            t24_corr: 553.2,
+            p24_corr: 20.6,
+            n2_corr: 12883.1,
+            w21_corr: 946.7,
+            fuel_rho_kg_l: 0.8,
+            fuel_gph: 780.8
+          }
+        # Expectations for Hot Day Takeoff (Theta=1.079685, Delta=0.986663)
+        - {
+            theta: 1.1,
+            delta: 1.0,
+            t_static_r: 550.1,
+            t24_corr: 565.0,
+            p24_corr: 20.3,
+            n2_corr: 9142.7,
+            w21_corr: 438.9,
+            fuel_rho_kg_l: 0.8,
+            fuel_gph: 1368.8
+          }
+        # Expectations for Cold High Alt (Theta=0.771203, Delta=0.47632)
+        - {
+            theta: 0.8,
+            delta: 0.5,
+            t_static_r: 381.0,
+            t24_corr: 544.6,
+            p24_corr: 18.9,
+            n2_corr: 12525.9,
+            w21_corr: 597.7,
+            fuel_rho_kg_l: 0.8,
+            fuel_gph: 509.1
+          }
+        # Expectations for Zero Safety (Should not crash, returns fallback/0)
+        - {
+            theta: 0.0,
+            delta: 0.0,
+            t_static_r: 0.0,
+            t24_corr: null,
+            p24_corr: null,
+            n2_corr: 0.0,
+            w21_corr: null,
+            fuel_rho_kg_l: 0.9,
+            fuel_gph: 0.0
+          }

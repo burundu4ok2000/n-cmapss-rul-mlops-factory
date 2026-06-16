@@ -1,0 +1,111 @@
+version: 2
+
+sources:
+  - name: telemetry_lake
+    description: >
+      Raw N-CMAPSS turbofan engine telemetry stored as Hive-partitioned Parquet files.
+      Each row represents 1 second of engine operation. Data covers 9 datasets (DS01–DS08c)
+      spanning 99 unique engine units across three flight classes (short/medium/long haul).
+      Altitude: 3,000–40,000 ft (ground operations excluded).
+      Columns follow NASA C-MAPSS nomenclature (Xs, Xv, W, Theta groups).
+    tables:
+      - name: raw_telemetry
+        description: >
+          Hive-partitioned Parquet lake at .workspace/telemetry_lake/.
+          Partition keys: dataset, split, unit.
+          Each file: one unit's complete lifecycle (dev or test split).
+        identifier: "read_parquet('/home/donald_trump/developer/n-cmapss-agentic-factory/.workspace/telemetry_lake/*/*/*/*.parquet', hive_partitioning=True)"
+        columns:
+          # --- Scenario Descriptors (W group) ---
+          - name: alt
+            description: "Altitude in feet. Range: ~3,000–40,000 ft. Ground ops excluded."
+          - name: Mach
+            description: "Flight Mach number. Range: 0.2–0.9."
+          - name: TRA
+            description: "Throttle Resolver Angle (%). Max observed ≈ 88.7% (take-off proxy > 85%)."
+          - name: T2
+            description: "Total temperature at fan inlet (°R). Used for ISO normalization (theta = T2/518.67)."
+
+          # --- Physical Sensors (Xs group) ---
+          - name: Wf
+            description: "Fuel flow in lbs/second (mass flow). Core metric for SFC and P&L analysis."
+          - name: Nf
+            description: "Physical fan speed (rpm)."
+          - name: Nc
+            description: "Physical core speed N2 (rpm). FADEC monitor for overspeed."
+          - name: T24
+            description: "Total temperature at LPC outlet (°R)."
+          - name: T30
+            description: "Total temperature at HPC outlet (°R). ISO-corrected for compressor health."
+          - name: T48
+            description: "Total temperature at HPT outlet (°R). Analog of EGT — primary health indicator."
+          - name: T50
+            description: "Total temperature at LPT outlet (°R)."
+          - name: P15
+            description: "Total pressure in bypass duct (psia)."
+          - name: P2
+            description: "Total pressure at fan inlet (psia). Used for ISO normalization (delta = P2/14.696)."
+          - name: P21
+            description: "Total pressure at fan outlet (psia)."
+          - name: P24
+            description: "Total pressure at LPC outlet (psia)."
+          - name: Ps30
+            description: "Static pressure at HPC outlet (psia). Used for Phi index (Wf/Ps30)."
+          - name: P40
+            description: "Total pressure at burner outlet (psia)."
+          - name: P50
+            description: "Total pressure at LPT outlet (psia)."
+
+          # --- Virtual Sensors (Xv group) ---
+          - name: T40
+            description: "Total temperature at burner outlet (°R). Virtual sensor."
+          - name: P30
+            description: "Total pressure at HPC outlet (psia). Virtual sensor."
+          - name: P45
+            description: "Total pressure at HPT outlet (psia). Virtual sensor."
+          - name: SmFan
+            description: "Fan stall margin. Virtual sensor."
+          - name: SmLPC
+            description: "LPC stall margin. Virtual sensor."
+          - name: SmHPC
+            description: "HPC stall margin. Key safety parameter. Alert if < 85% of unit's early-life nominal."
+          - name: phi
+            description: "Ratio of fuel flow to Ps30 (pps/psi). NASA-defined stall risk proxy."
+
+          # --- Health Parameters (Theta group) ---
+          - name: fan_eff_mod
+            description: "Fan efficiency modifier. Delta from nominal. Negative = degradation."
+          - name: fan_flow_mod
+            description: "Fan flow modifier."
+          - name: LPC_eff_mod
+            description: "LPC efficiency modifier."
+          - name: LPC_flow_mod
+            description: "LPC flow modifier."
+          - name: HPC_eff_mod
+            description: "HPC efficiency modifier. Primary compressor health indicator."
+          - name: HPC_flow_mod
+            description: "HPC flow modifier."
+          - name: HPT_eff_mod
+            description: "HPT efficiency modifier. Key parameter in Failure Mode 1 (DS units 2,5,10)."
+          - name: HPT_flow_mod
+            description: "HPT flow modifier."
+          - name: LPT_eff_mod
+            description: "LPT efficiency modifier. Key in Failure Mode 2 (combined HPT+LPT)."
+          - name: LPT_flow_mod
+            description: "LPT flow modifier."
+
+          # --- Administrative / Target (Auxiliary group) ---
+          - name: unit
+            description: "Engine unit identifier within the dataset."
+          - name: cycle
+            description: "Flight cycle number (1 = fresh engine, max = EOL)."
+          - name: Fc
+            description: "Flight class: 1=Short (~646km), 2=Medium (~1501km), 3=Long (~2588km)."
+          - name: hs
+            description: "Health state: 0=Normal degradation, 1=Abnormal degradation."
+          - name: RUL
+            description: "Remaining Useful Life in cycles. Target variable for ML models."
+          - name: dataset
+            description: "Source dataset identifier (e.g., N-CMAPSS_DS04)."
+          - name: split
+            description: "Data split: dev or test."

@@ -1,0 +1,29 @@
+# ==============================================================================
+# N-CMAPSS RUL Model Factory: Dev Overrides
+# Purpose: Local development settings and debugging.
+# ==============================================================================
+
+runtime:
+  environment: dev
+  log_level: DEBUG
+
+storage:
+  # Local development paths (relative to project root)
+  root_dir: "."
+  data_dir: "data"
+  results_dir: "results"
+  object_store: local
+
+training:
+  # Faster iteration for development
+  default_parameters:
+    epochs: 10
+    batch_size: 64
+  
+  # Allow skipping heavy generation if artifacts exist
+  fast_forward_source: true
+
+security:
+  # Disable heavy signing for local dev if keys are missing
+  sign_artifacts: false
+  generate_provenance: true

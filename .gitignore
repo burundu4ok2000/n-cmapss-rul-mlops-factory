@@ -11,17 +11,17 @@ _todo/
 .workspace/
 
 # not completed files or directories
-blueprints/
 docs/
 rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc/data/
-
-
 
 # dbt example
 .dbt-example/
 
+# Developer sandbox
+scratch/
 
-
+# DuckDB databases
+*.duckdb
 
 
 

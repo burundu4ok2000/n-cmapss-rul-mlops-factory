@@ -1,0 +1,51 @@
+# ============================================================================
+# Prod-Konfiguration: Cloud-Overrides fuer GCP-Deployment
+# Zweck: Ueberschreibt base.yaml Werte fuer produktionsnahen Cloud-Betrieb
+# Hinweis: TODO_*-Platzhalter muessen durch echte Werte ersetzt werden
+# ============================================================================
+
+runtime:
+  environment: prod
+
+# --- Cloud Object Storage statt lokaler Dateien ---
+storage:
+  object_store: gcs
+
+sources:
+  # --- Olist: Cloud-Landing-Bucket ---
+  olist:
+    source_bucket: TODO_OLIST_LANDING_BUCKET
+    extract_mode: incremental
+
+  # --- Retailrocket: Managed Kafka mit SASL_SSL ---
+  retailrocket:
+    bootstrap_servers: TODO_MANAGED_KAFKA_BOOTSTRAP
+    security_protocol: SASL_SSL
+    sasl_secret_ref: TODO_SECRET_MANAGER_KAFKA
+
+  # --- Externe APIs: Collection-Referenzen ---
+  open_food_facts:
+    raw_collection: open_food_facts_products_raw
+    user_agent_secret_ref: TODO_SECRET_MANAGER_OPEN_FOOD_FACTS_USER_AGENT
+  open_meteo:
+    raw_collection: open_meteo_weather_raw
+  frankfurter:
+    raw_collection: frankfurter_fx_raw
+
+warehouse:
+  target: prod
+
+# --- GCP-Konfiguration ---
+gcp:
+  project_id: TODO_PROJECT_ID
+  region: TODO_REGION
+  raw_bucket: TODO_RAW_BUCKET
+  processed_bucket: TODO_PROCESSED_BUCKET
+  bigquery_dataset: analytics
+  bigquery_location: US    # Kompatibel mit Public Datasets
+
+notes:
+  - "TODO: wire all prod secrets through Secret Manager, Vault, or the target deployment platform."
+  - "TODO: validate network, service account, and IAM requirements before applying Terraform."
+  - "TODO: decide whether Mongo raw collections stay operational or are mirrored into GCS/BigQuery for long-term retention."
+  - "TODO: keep BigQuery datasets in the US multi-region if GA4 or the Look public datasets are queried directly."

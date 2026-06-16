@@ -1,0 +1,136 @@
+# ==============================================================================
+# КАК ЭТО ДОЛЖНО БЫТЬ (FUTURE STATE - TARGET ARCHITECTURE)
+# ==============================================================================
+
+# --- 1. ГЛОБАЛЬНЫЕ СТАНДАРТЫ (Global Anchors) ---
+blueprint_version: "0.0.9"
+factory_root: "/factory"                                    # Единая точка отсчета (Container Native)
+
+# --- 2. СТРАТЕГИЧЕСКИЙ МАПИНГ (The Great Migration) ---
+# [LEGACY VENDOR PATH]           <───────>   [NEW FACTORY STANDARD]
+# ------------------------------------------------------------------------------
+# ../data/ncmapss/               <───────>   /factory/data/
+# results/ncmapss/bayesian/      <───────>   /factory/results/runs/${RUN_ID}/
+# lightning_logs/                <───────>   /factory/results/runs/${RUN_ID}/logs/
+# checkpoints/                   <───────>   /factory/results/runs/${RUN_ID}/model/
+# bi_obj/optimization.db         <───────>   /factory/results/runs/${RUN_ID}/studies/optimization.db
+# single_obj/studies.db          <───────>   /factory/results/runs/${RUN_ID}/studies/studies.db
+# pca.pkl                        <───────>   /factory/data/assets/pca.pkl
+# predictions/                   <───────>   /factory/results/runs/${RUN_ID}/predictions/
+
+# --- 3. СТРАТЕГИИ ПО ОКРУЖЕНИЯМ (Environment Strategies) ---
+environments:
+  local:
+    roots:
+      data: ".workspace/raw-telemetry"
+      assets: "rul-model-factory/artifacts/assets"
+      results: "rul-model-factory/artifacts/runs/${RUN_ID}"
+      logs: "local-logs"
+
+  container:
+    roots:
+      data: "/factory/data"                                   # [ReadOnly]
+      assets: "/factory/assets"                               # [Fast IO / Cache]
+      results: "/factory/results"                             # [WriteOnly / Sync Target]
+      logs: "/factory/logs"                                   # [Stream / Telemetry]
+
+# --- 4. ЛОГИЧЕСКИЕ ПУТИ (Logical Mapping - PathResolver API) ---
+logical_mapping:
+  raw_telemetry:      { id: "data", sub_path: "ncmapss" }
+  dataset_assets:     { id: "data", sub_path: "assets" }
+  checkpoints:        { id: "results", sub_path: "model" }
+  model_export:       { id: "results", sub_path: "export" }
+  optuna_studies:     { id: "results", sub_path: "studies" }
+  predictions:        { id: "results", sub_path: "predictions" }
+  industrial_audit:   { id: "logs", sub_path: "audit" }       # [NEW] factory_telemetry.py output
+  training_logs:      { id: "logs", sub_path: "lightning" }   # Raw lightning logs
+  tensorboard:        { id: "logs", sub_path: "tensorboard" }
+
+# --- 5. ТАРГЕТНАЯ ВИЗУАЛЬНАЯ СТРУКТУРА (THE THREE WORLDS) ---
+
+# ----------------------------------------------------------------------------
+# WORLD 1: LOCAL DEVELOPMENT (Dell Machine)
+# Фокус: Порядок в репозитории, изоляция экспериментов, прослеживаемость.
+# ----------------------------------------------------------------------------
+#  / (Project Root)
+#  ├── .workspace/                    <───────  [logical:data_root] (БАЗА ЗНАНИЙ И ДАННЫХ)
+#  │   ├── raw-telemetry/             <───────  [logical:raw_telemetry] (Was: data/ncmapss/*.h5)
+#  │   ├── dataset-resources/         <───────  [logical:dataset_assets] (Was: dataset source PDFs/slides)
+#  │   ├── compliance/                <───────  [Compliance] (AI Act, GDPR, ISO)
+#  │   └── guides/                    <───────  [Style Guides] (Google Python Style, etc.)
+#  │
+#  ├── local-logs/                    <───────  [logical:logs_root]
+#  │   └── audit/                     <───────  [logical:industrial_audit] (.json)
+#  │
+#  ├── results/                       <───────  [GLOBAL SHARED RESULTS]
+#  │   └── provenance/                <───────  [SECURITY: FACTORY PASSPORT] (Global Image Identity)
+#  │       ├── image_digest.txt       <───────  SHA256 of current production-grade image
+#  │       ├── image_digest.txt.sig   <───────  Sigstore Cryptographic Signature
+#  │       └── image_digest.txt.cert  <───────  OIDC Identity Certificate
+#  │
+#  └── rul-model-factory/
+#      └── artifacts/                 <───────  [ML ARTIFACT HUB]
+#          ├── assets/                <───────  [logical:serialized_assets] (Shared Parquet/LMDB Cache)
+#          │   └── ncmapss/           <───────  (Shared between sessions to save disk/time)
+#          │
+#          └── runs/                  <───────  [SESSION VAULT]
+#              └── ${RUN_ID}/         <───────  ИЗОЛИРОВАННАЯ СЕССИЯ
+#                  ├── .raw_sync/     <───────  (Transient rsync buffer from GCS)
+#                  ├── model/         <───────  [logical:checkpoints] (Was: checkpoints/)
+#                  ├── export/        <───────  Финальные .pt веса для деплоя
+#                  ├── studies/       <───────  [logical:optuna_studies] (Was: bi_obj/ and single_obj/)
+#                  ├── predictions/   <───────  [logical:predictions] (Was: predictions/)
+#                  ├── logs/          <───────  [logical:training_logs] (Was: lightning_logs/)
+#                  ├── metadata/      <───────  hparams.yaml и коммит-хэш (${GIT_COMMIT_HASH})
+#                  └── security/      <───────  [SECURITY: MODEL BIRTH CERTIFICATE] (Session Provenance)
+#                      ├── provenance.json <────── Meta: Who/When/Commit/Instance
+#                      └── *.sig / *.cert  <────── Signatures of specific model weights
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# WORLD 2: CONTAINER RUNTIME (Standardized Docker) <─────── [THE BRIDGE]
+# ----------------------------------------------------------------------------
+#  /factory/                          <───────  [GLOBAL ROOT]
+#  ├── data/                          <───────  [RO Mount] (Чистые данные) <────── gs://raw/
+#  │   ├── ncmapss/                   <───────  .h5 файлы
+#  │   └── assets/                    <───────  pca.pkl
+#  │
+#  ├── assets/                        <───────  [RW Mount] (Эфемерный диск) <────── gs://results/runs/FF/
+#  │   └── ncmapss/serialized/        <───────  Parquet/LMDB
+#  │
+#  ├── results/                       <───────  [WO Mount] (Синхронизация) ───────> gs://results/runs/${RUN_ID}/
+#  │   ├── model/                     <───────  *.ckpt
+#  │   ├── export/                    <───────  *.pt
+#  │   ├── studies/                   <───────  *.db
+#  │   └── predictions/               <───────  *.parquet
+#  │
+#  └── logs/                          <───────  [Stream Mount] (Telemetry) ───────> gs://logs/${INSTANCE_NAME}/
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# WORLD 3: CLOUD DATA LAKE (GCS Storage)
+# ----------------------------------------------------------------------------
+#  gs://ncmapss-data-lake/
+#  ├── raw/                           <───────  [SSOT] (Data Fuel)
+#  │   └── *.h5
+#  │
+#  ├── results/
+#  │   └── runs/                      <───────  [SESSION VAULT]
+#  │       └── ${RUN_ID}/
+#  │           ├── model/             <───────  Weight Checkpoints
+#  │           ├── studies/           <───────  Optimization Databases
+#  │           └── predictions/       <───────  Validation Reports
+#  │
+#  └── logs/
+#      └── ${INSTANCE_NAME}/          <───────  [TELEMETRY VAULT]
+#          └── TRAINING_SUCCESS.log   <───────  [SENTINEL]
+# ----------------------------------------------------------------------------
+
+# --- 6. ПРАВИЛА ОРКЕСТРАЦИИ (Orchestration Rules) ---
+orchestration:
+  barrier_pattern: { enabled: true, fail_fast: true }
+  cleanup_policy: { local: "keep", container: "purge" }
+  injection_rules: { intercept_relative: true, force_isolation: true }
+  telemetry_policy:
+    sink: ["google_cloud", "failover_file"]
+    rotation: "session-based"

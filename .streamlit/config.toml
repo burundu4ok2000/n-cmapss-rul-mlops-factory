@@ -1,0 +1,33 @@
+# Premium Dracula Theme for N-CMAPSS Aerospace Analytics
+[theme]
+base = "dark"
+primaryColor = "#3b82f6"  # Using our original accent blue for brand continuity
+backgroundColor = "#0f172a"
+secondaryBackgroundColor = "#1e293b"
+codeBackgroundColor = "#1e293b"
+textColor = "#e2e8f0"
+linkColor = "#8b5cf6"
+borderColor = "#334155"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+codeFontSize = "13px"
+codeTextColor = "#e2e8f0"
+baseFontSize = 14
+baseFontWeight = 400
+headingFontSizes = ["32px", "24px", "20px", "16px", "14px", "12px"]
+headingFontWeights = [600, 600, 600, 500, 500, 500]
+linkUnderline = false
+
+# Custom Plotly-friendly categorical colors for consistency
+chartCategoricalColors = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#64748b"]
+
+[theme.sidebar]
+backgroundColor = "#1e293b"
+secondaryBackgroundColor = "#0f172a"
+codeBackgroundColor = "#0f172a"
+borderColor = "#334155"
