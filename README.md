@@ -58,17 +58,18 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 <b>
 <a href="#-the-challenge">Challenge</a> ·
-<a href="#-the-solution-adaptive-shim-architecture">Architecture</a> ·
-<a href="#-system-architecture-4-node-lifecycle">Pipeline</a> ·
-<a href="#-full-architecture-map">Full Map</a> ·
-<a href="#-the-bayesian-engine">Bayesian Engine</a> ·
-<a href="#-the-shim-layer-in-detail">Shim Layer</a> ·
+<a href="#-architecture">Architecture</a> ·
+<a href="#-dashboard">Dashboard</a> ·
 <a href="#-repository-structure">Structure</a> ·
+<a href="#-compliance-audit-trail">Compliance</a> ·
+<a href="#-terraform-infrastructure-3-layer-architecture">Terraform</a> ·
+<a href="#-transforma-the-researcher-code">Shim Layer</a> ·
+<a href="#-now-were-prepared">CI/CD Flow</a> ·
 <a href="#-quick-start">Quick Start</a> ·
-<a href="#-model-training-benchmarks">Benchmarks</a> ·
-<a href="#-compliance--audit-trail">Compliance</a> ·
-<a href="#-iam--least-privilege">IAM</a> ·
-<a href="#-vs-original-research-code">vs Research</a>
+<a href="#-working-process">Working Process</a> ·
+<a href="#-the-bayesian-engine">Bayesian Engine</a> ·
+<a href="#-n-cmapss-features-analysis">NASA Features</a> ·
+<a href="#-license-attribution">License</a>
 </b>
 
 </div>
@@ -262,7 +263,147 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
 
 <br>
 
-## 🛡️ TERRAFORM IAM & Least Privilege
+## 🛡️ Terraform Infrastructure: 3-Layer Architecture
+
+The entire GCP environment is defined as code. Three Terraform layers, zero manual console clicks:
+
+```mermaid
+graph TB
+    subgraph "Layer 0: Bootstrap"
+        BOOT["_bootstrap/main.tf<br/>Terraform State Bucket<br/>Versioning enabled<br/>force_destroy = false"]
+    end
+
+    subgraph "Layer 1: Live Environment"
+        KMS["kms.tf<br/>KMS Keyring<br/>90-day key rotation<br/>CMEK for GCS + Compute"]
+        MAIN["main.tf<br/>Module instantiation<br/>ephemeral-hpc-worker"]
+        BACKEND["backend.tf<br/>GCS backend<br/>FAIL-SAFE placeholder<br/>(requires orchestrator)"]
+    end
+
+    subgraph "Layer 2: Ephemeral HPC Module"
+        direction TB
+        COMPUTE["compute.tf<br/>c2d-standard-32<br/>AMD Milan<br/>pd-ssd 500GB<br/>CMEK encrypted disk<br/>Instance Template<br/>create_before_destroy"]
+        IAM["iam.tf<br/>training-sa<br/>5 IAM bindings<br/>Bucket-scoped<br/>Registry reader<br/>Self-delete only"]
+        STORAGE["storage.tf<br/>GCS: versioned, CMEK<br/>30-day lifecycle<br/>Artifact Registry: Docker"]
+        STARTUP["startup.sh.tftpl<br/>6-phase lifecycle<br/>Docker -> GCS sync -> <br/>Preprocessing -> Training -> <br/>Forensic recovery -> Self-destruct"]
+        OUTPUTS["outputs.tf<br/>bucket_url<br/>artifact_registry_uri<br/>service_account_email<br/>instance_template_link"]
+    end
+
+    BOOT --> BACKEND
+    KMS --> COMPUTE
+    KMS --> STORAGE
+    MAIN --> COMPUTE
+    MAIN --> IAM
+    MAIN --> STORAGE
+    STARTUP --> COMPUTE
+    COMPUTE --> OUTPUTS
+    IAM --> OUTPUTS
+    STORAGE --> OUTPUTS
+```
+
+### Layer 0: Bootstrap — The Root of Trust
+
+```hcl
+# _bootstrap/main.tf
+resource "google_storage_bucket" "terraform_state" {
+  name          = "ncmapss-terraform-state-PROJECT_ID"
+  force_destroy = false   # Accidental deletion protection
+  versioning { enabled = true }
+}
+```
+
+A single GCS bucket that holds ALL Terraform state. Created once, touched never. `force_destroy = false` means you can't accidentally nuke it. Versioning means you can roll back any state corruption.
+
+### Layer 1: Live Environment — KMS + Module Wiring
+
+**`backend.tf`** — a deliberate FAIL-SAFE:
+
+```hcl
+backend "gcs" {
+  bucket = "ncmapss-terraform-state-REPLACE_ME"  # Intentional dead end
+}
+```
+
+This placeholder **forces** the orchestrator to pass `-backend-config`. Nobody can accidentally `terraform init` with wrong state — the command will fail until the correct bucket is explicitly provided. This prevents the classic "applied to wrong project" disaster.
+
+**`kms.tf`** — DORA-compliant encryption:
+
+| Resource | Detail |
+|---|---|
+| `google_kms_key_ring` | `hpc-factory-keyring` — logical key group |
+| `google_kms_crypto_key` | `hpc-data-key` — **90-day rotation** (`7776000s`) |
+| `prevent_destroy` | `true` — key cannot be deleted without manual override |
+| CMEK bindings | GCS service agent + Compute Engine agent both get `cryptoKeyEncrypterDecrypter` |
+
+### Layer 2: The Ephemeral HPC Worker Module
+
+This is where the actual training happens. A self-contained module that provisions a **temporary** 32-core machine with SSD storage, pulls signed Docker images, trains a Bayesian model, and **deletes itself** when done.
+
+**`compute.tf`** — the self-destroying training node:
+
+| Setting | Value | Why |
+|---|---|---|
+| `machine_type` | `c2d-standard-32` | AMD Milan, 32 vCPU, 64 GB RAM — optimal for CPU-bound Bayesian VI |
+| `disk_type` | `pd-ssd` | 500 GB local SSD for 10 HDF5 datasets + Parquet/LMDB intermediates |
+| `disk_encryption_key` | CMEK via KMS | Data-at-rest encryption enforceable by the auditor |
+| `on_host_maintenance` | `MIGRATE` | Live migrate if GCP needs the physical host |
+| `automatic_restart` | `false` | Training is NOT idempotent. Restart -> broken state. Fail-closed. |
+| `create_before_destroy` | `true` | Zero-downtime template updates |
+
+**`iam.tf`** — least privilege, scoped to exactly what the worker needs:
+
+| IAM Binding | Role | Scope | Why Not Wider |
+|---|---|---|---|
+| GCS bucket | `roles/storage.objectAdmin` | **Bucket-scoped** | Can't touch any other bucket in the project |
+| Artifact Registry | `roles/artifactregistry.reader` | **Single repo** | Pull-only. Can't push, can't delete images |
+| Cloud Logging | `roles/logging.logWriter` | Project | **Write-only.** Worker cannot read any logs |
+| Batch | `roles/batch.agentReporter` | Project | Status reporting for orchestration |
+| Compute Engine | `roles/compute.instanceAdmin.v1` | Project | **Self-termination** — the single broadest permission |
+
+> Note: `compute.instanceAdmin.v1` is the only project-wide permission. The roadmap includes replacing it with a custom role scoped exclusively to `compute.instances.delete` on the worker's own instance.
+
+**`storage.tf`** — data lake with automatic cleanup:
+
+| Setting | Value | Why |
+|---|---|---|
+| `versioning` | `true` | Every overwrite preserved. Audit can replay any state. |
+| `uniform_bucket_level_access` | `true` | No per-object ACLs. IAM only. |
+| `lifecycle_rule` | Delete after 30 days | Training artifacts are ephemeral. Harvested models live in Artifact Registry. |
+| `encryption` | CMEK via KMS | Same 90-day rotation key as compute disks |
+| `immutable_tags` | `false` | `latest` tag updates on every build |
+
+#### startup.sh.tftpl — The 6-Phase Lifecycle
+
+This Bash script rendered by Terraform runs automatically on first boot:
+
+```mermaid
+flowchart TD
+    P1["Phase 1: Provisioning<br/>Install Docker, pull signed image<br/>Resolve GIT_COMMIT_HASH from metadata"] --> P2
+    P2["Phase 2: Data Fueling<br/>gcloud storage cp raw/*.h5 -> local<br/>Fast-Forward: recycle Parquet/LMDB if set"] --> P3
+    P3["Phase 3: Preprocessing<br/>docker run -> ncmapss.generate_files<br/>HDF5 -> Parquet -> LMDB<br/>32-core ProcessPoolExecutor<br/>tee /dev/ttyS0"] --> P3_CHECK
+    P3_CHECK{"Success?"} -->|"No"| P3_FAIL["Forensic: journalctl -> GCS<br/>-> terminate_workflow()"]
+    P3_CHECK -->|"Yes"| P4
+    P4["Phase 4: Training<br/>docker run -> ncmapss.train_model<br/>--bayesian --archi bigception<br/>--GPU -1 (CPU mode)<br/>tee /dev/ttyS0"] --> P4_CHECK
+    P4_CHECK{"Success?"} -->|"No"| P4_FAIL["Forensic: journalctl -> GCS<br/>-> terminate_workflow()"]
+    P4_CHECK -->|"Yes"| P5
+    P5["Phase 5: Success<br/>TRAINING_SUCCESS.log -> GCS<br/>-> terminate_workflow()"]
+    P3_FAIL --> P6
+    P4_FAIL --> P6
+    P5 --> P6
+    P6["Phase 6: Self-Destruct<br/>Forensic recovery -> GCS quarantine/<br/>nohup sleep 15 -> gcloud delete<br/>BINGO #30: fail-safe subshell"]
+```
+
+**Key design decisions in startup.sh.tftpl:**
+
+| Decision | Implementation | Why |
+|---|---|---|
+| **Fail-closed** | Both preprocessing and training failures -> forensic log capture -> self-destruct | No zombie instances. Every failure leaves an audit trail in GCS. |
+| **Serial console tee** | `2>&1 | tee /dev/ttyS0` on every docker run | Logs survive even if SSH/network dies mid-training. Cloud Logging picks up serial output. |
+| **Forensic recovery** | On ANY exit path, `terminate_workflow()` syncs local `results/` -> GCS quarantine | Even a crashed training session preserves partial artifacts for RCA. |
+| **BINGO #30** | Self-deletion runs in a `nohup` subshell with its own error handling | If IAM permission for deletion is missing, the error is written to serial console — not silently lost. |
+| **Fast-Forward** | If `FF_SOURCE` is set, download existing Parquet/LMDB from GCS | Skips 18-minute preprocessing for iterative training runs. |
+| **Metadata injection** | `GIT_COMMIT_HASH` and `RUN_ID` passed via instance metadata at provision time | Every log carries exact git context without baking it into the Docker image. |
+
+### IAM Summary
 
 | Service | IAM Role | Scope |
 |---|---|---|
@@ -271,10 +412,9 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
 | **Artifact Registry** | `roles/artifactregistry.reader` | Pull signed images only |
 | **Compute Engine** | `roles/compute.instanceAdmin.v1` | Self-termination only |
 
-All containers run as **non-root UID 1000**. The application logic never gains root. Docker builds use strict `.dockerignore` denying all by default.
+All containers run as **non-root UID 1000**. The application logic never gains root. Docker builds use strict `.dockerignore` denying all by default. Boot disk encrypted with KMS CMEK key (90-day rotation).
 
 <br>
-
 ## 🛡️ Transforma the researcher code:
 
 | # | Interception Point | File | Method | What Was Adapted |
