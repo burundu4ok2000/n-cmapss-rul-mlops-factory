@@ -106,7 +106,7 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 ## 🏗️ Architecture
 
-<img width="1041" height="1772" alt="architecture" src="https://github.com/user-attachments/assets/b135b29f-003b-44a5-8d96-0b32906587ac" />
+<img width="1141" height="1872" alt="architecture" src="https://github.com/user-attachments/assets/b135b29f-003b-44a5-8d96-0b32906587ac" />
 
 <br>
 
