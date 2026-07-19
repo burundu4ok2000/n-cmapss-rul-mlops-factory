@@ -1,15 +1,76 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/EU_AI_Act-High_Risk-red?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEyIDJMNCA1djYuMDljMCA1LjA1IDMuNDEgOS43NiA4IDEwLjkxIDQuNTktMS4xNSA4LTUuODYgOC0xMC45MVY1bC04LTN6bTAgMi4xOGw2IDIuMjV2NS43NGMwIDQuMjgtMi44MyA4LjI0LTYgOS4zMy0zLjE3LTEuMDktNi01LjA1LTYtOS4zM1Y2LjQzbDYtMi4yNXoiLz48L3N2Zz4=">
-  <img src="https://img.shields.io/badge/Zero_Trust-Sigstore_✗_SafeTensors-black?style=for-the-badge&logo=sigstore&logoColor=white">
-  <img src="https://img.shields.io/badge/GCP-HPC_32_Core-blue?style=for-the-badge&logo=googlecloud&logoColor=white">
-  <img src="https://img.shields.io/badge/PyTorch-Bayesian_CNN-orange?style=for-the-badge&logo=pytorch&logoColor=white">
-</p>
+<div align="center">
 
 # 🛡️ N-CMAPSS RUL MLOps Factory
 
-### Make Bayesian CNN Research Code Face the EU AI Act
+### *Make Bayesian CNN Research Code Face the EU AI Act*
 
-> **TL;DR:** A researcher wrote a Bayesian CNN for aircraft engine failure prediction. It works on his GPU. The company says "deploy this in production, but make it EU AI Act compliant, CPU-only, fully auditable, and don't edit the original research code." This repo is the answer.
+From a researcher's GPU-locked Python script to an industrial-grade, EU AI Act-compliant
+MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down to the bit.
+
+<br/>
+
+<!-- ═══════════════════════ COMPLIANCE BADGES ═══════════════════════ -->
+
+<img src="https://img.shields.io/badge/EU_AI_Act-High_Risk-red?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEyIDJMNCA1djYuMDljMCA1LjA1IDMuNDEgOS43NiA4IDEwLjkxIDQuNTktMS4xNSA4LTUuODYgOC0xMC45MVY1bC04LTN6bTAgMi4xOGw2IDIuMjV2NS43NGMwIDQuMjgtMi44MyA4LjI0LTYgOS4zMy0zLjE3LTEuMDktNi01LjA1LTYtOS4zM1Y2LjQzbDYtMi4yNXoiLz48L3N2Zz4=">
+<img src="https://img.shields.io/badge/Zero_Trust-Sigstore_✗_SafeTensors-black?style=for-the-badge&logo=sigstore&logoColor=white">
+<img src="https://img.shields.io/badge/GCP-HPC_32_Core-blue?style=for-the-badge&logo=googlecloud&logoColor=white">
+<img src="https://img.shields.io/badge/PyTorch-Bayesian_CNN-orange?style=for-the-badge&logo=pytorch&logoColor=white">
+
+<br/>
+<br/>
+
+<!-- ═══════════════════════ TECH STACK ═══════════════════════ -->
+
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-Bayesian_V1-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
+![SafeTensors](https://img.shields.io/badge/SafeTensors-zero_RCE-00C7B7?style=for-the-badge)
+![Apache Spark](https://img.shields.io/badge/PySpark-4.1.1-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
+![Apache Iceberg](https://img.shields.io/badge/Iceberg-Lakehouse-1E90FF?style=for-the-badge&logo=apache&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-Dimensional_Marts-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
+![DuckDB](https://img.shields.io/badge/DuckDB-Analytical_DWH-FFF000?style=for-the-badge&logo=duckdb&logoColor=black)
+
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![Redpanda](https://img.shields.io/badge/Redpanda-Kafka_Compatible-FF5500?style=for-the-badge&logo=apachekafka&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Hermetic_Builds-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
+![GCP](https://img.shields.io/badge/GCP-Compute_Engine-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)
+![Sigstore](https://img.shields.io/badge/Cosign-Keyless_Signing-000000?style=for-the-badge&logo=sigstore&logoColor=white)
+
+![pytest](https://img.shields.io/badge/pytest-244_tests-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
+![Coverage](https://img.shields.io/badge/coverage-82.51%25-brightgreen?style=flat-square)
+![Ruff](https://img.shields.io/badge/Ruff-Linting-D7FF64?style=flat-square&logo=ruff&logoColor=black)
+![mypy](https://img.shields.io/badge/mypy-Static_Typing-2A6DB5?style=flat-square&logo=python&logoColor=white)
+![Trivy](https://img.shields.io/badge/Trivy-Security_Scan-1904DA?style=flat-square&logo=trivy&logoColor=white)
+![pre-commit](https://img.shields.io/badge/pre--commit-CI_Gate-FAB040?style=flat-square&logo=precommit&logoColor=black)
+
+![ADRs](https://img.shields.io/badge/ADRs-10-blueviolet?style=flat-square)
+![Provenance](https://img.shields.io/badge/provenance-Keyless_Sigstore-black?style=flat-square)
+![License](https://img.shields.io/badge/license-Apache_2.0-green?style=flat-square)
+
+<br/>
+
+<b>
+<a href="#-the-challenge">Challenge</a> ·
+<a href="#-the-solution-adaptive-shim-architecture">Architecture</a> ·
+<a href="#-system-architecture-4-node-lifecycle">Pipeline</a> ·
+<a href="#-full-architecture-map">Full Map</a> ·
+<a href="#-the-bayesian-engine">Bayesian Engine</a> ·
+<a href="#-the-shim-layer-in-detail">Shim Layer</a> ·
+<a href="#-repository-structure">Structure</a> ·
+<a href="#-quick-start">Quick Start</a> ·
+<a href="#-model-training-benchmarks">Benchmarks</a> ·
+<a href="#-compliance--audit-trail">Compliance</a> ·
+<a href="#-iam--least-privilege">IAM</a> ·
+<a href="#-vs-original-research-code">vs Research</a>
+</b>
+
+</div>
+
+<br/>
+
+---
+
+> **TL;DR:** A researcher wrote a Bayesian CNN for aircraft engine failure prediction. It works on his GPU. The company says *"deploy this in production, but make it EU AI Act compliant, CPU-only, fully auditable, and don't edit the original research code."* This repo is the answer.
 
 ---
 
@@ -22,26 +83,25 @@
 <tr>
 <td width="50%" align="center">
 
-### 🔬 What the researcher Gave me
+### 🔬 What the Researcher Gave Me
 
-**Brilliant Bayesian algorythm**
-**But**
-**No provenance. No audit trail. No safety.**
-**It won't survive critical infrastructure compliance audit**
+**Brilliant Bayesian algorithm**
+**But: no provenance. No audit trail. No safety.**
+**It won't survive a critical infrastructure compliance audit.**
 
 </td>
 <td width="50%" align="center">
 
-### 🏭 What need to be build?
+### 🏭 What Had to Be Built
 
-<table>
-<tr><td>🔐</td><td>No arbitrary code execution (pickle → SafeTensors)</td></tr>
-<tr><td>✍️</td><td>Cryptographic signatures (Sigstore/cosign)</td></tr>
-<tr><td>📋</td><td>Immutable provenance manifests</td></tr>
-<tr><td>🖥️</td><td>CPU-only deployment (no CUDA lock-in)</td></tr>
-<tr><td>📊</td><td>Full audit telemetry (every run, every artifact)</td></tr>
-<tr><td>🛑</td><td>Fail-closed: crash & preserve evidence</td></tr>
-</table>
+| Requirement | Implementation |
+|---|---|
+| 🔐 Zero RCE vectors | pickle → SafeTensors |
+| ✍️ Tamper-proof weights | Sigstore/Cosign keyless signing |
+| 📋 Audit trail | provenance.json birth certificate |
+| 🖥️ CPU-only deployment | CUDA lobotomy via metaclass shim |
+| 📊 Full observability | Serial console tee → Cloud Logging |
+| 🛑 Fail-closed | Crash → preserve evidence → GCS |
 
 </td>
 </tr>
@@ -56,28 +116,29 @@
 
 <img width="736" height="1438" alt="Gemini_Generated_Image_qnskm1qnskm1qnsk" src="https://github.com/user-attachments/assets/8d0e24d8-7255-4a04-8e06-2f6bd3fc40bb" />
 
-
 <br>
 
 ## 🏗️ System Architecture: 4-Node Lifecycle
 
+A full-stack streaming pipeline from raw NASA telemetry to real-time Bayesian inference:
+
 ```mermaid
 graph LR
     subgraph "Node 0: Staging"
-        A["📦 NASA HDF5<br/>10 flight datasets<br/>DS01-DS08"] --> B["⚙️ Parallel Processor<br/>32-core scatter/gather"]
-        B --> C["🧹 Parquet/LMDB<br/>Global Z-Score normalized"]
+        A["📦 NASA HDF5<br/>10 flight datasets<br/>DS01-008"] --> B["⚙️ Parallel Processor<br/>32-core scatter/gather<br/>ProcessPoolExecutor"]
+        B --> C["🧹 Parquet/LMDB<br/>Global Z-Score normalized<br/>Unit-based train/test split"]
     end
 
     subgraph "Node 1: Streamer"
-        D["🚀 Multi-Unit Fleet Simulator<br/>Redpanda/Kafka-compatible"]
+        D["🚀 Multi-Unit Fleet Simulator<br/>Redpanda/Kafka-compatible<br/>ThreadPoolExecutor<br/>CPU Affinity<br/>Time-Warp undersampling"]
     end
 
     subgraph "Node 2: Inference"
-        E["🧠 Bayesian BigCeption<br/>Flipout VI, 8 particles<br/>Dual-domain Z-Score recovery<br/>30-cycle sliding window"]
+        E["🧠 Bayesian BigCeption<br/>Flipout VI, 8 particles<br/>Dual-domain Z-Score recovery<br/>30-cycle sliding window<br/>DuckDB persistent sink"]
     end
 
     subgraph "Node 3: Sentinel"
-        F["📊 Streamlit Dashboard<br/>RUL manifold visualization<br/>Uncertainty (σ) quantification<br/>15 FPS lock-free DuckDB mirror"]
+        F["📊 Streamlit Dashboard<br/>RUL manifold visualization<br/>Uncertainty σ quantification<br/>LOWESS scientific smoothing<br/>15 FPS lock-free DuckDB mirror"]
     end
 
     C --> D
@@ -96,72 +157,120 @@ graph LR
 
 ## 🔐 Security: The Trilateral Protocol
 
-Every model that leaves the factory passes through three mandatory gates:
+Every model that leaves the factory passes through three mandatory gates. None can be skipped:
 
 <img width="736" height="1438" alt="Gemini_Generated_Image_15vv9815vv9815vv" src="https://github.com/user-attachments/assets/fbbb9623-a59b-449b-9310-10d36bdb5bcb" />
-
 
 <br>
 
 ## 📊 Full Architecture Map
 
+**This is the complete project architecture.** Every data source, every processing stage, every storage layer, every output:
+
 ```mermaid
 graph TB
     subgraph "📦 Data Sources"
-        NASA["NASA N-CMAPSS<br/>10 HDF5 datasets<br/>DS01-008"]
-        DORA["EU DORA Regulation<br/>XML scraper"]
-    end
-
-    subgraph "💻 Local Development (uv monorepo)"
         direction TB
-        RF["rul-model-factory/<br/>Bayesian training engine"]
-        SP["streaming_pipeline/<br/>Real-time inference"]
-        IS["infrastructure-setup/<br/>Terraform + Docker + scripts"]
+        NASA["🛩️ NASA N-CMAPSS<br/>10 HDF5 datasets<br/>DS01-005 through DS08d-010<br/>Turbofan Engine Degradation<br/>Simulation Data Set 2"]
+        DORA["📜 EU DORA Regulation<br/>XML scraper<br/>(Digital Operational<br/>Resilience Act articles)"]
+        EURLEX["⚖️ EUR-Lex Cellar API<br/>EU AI Act legal texts<br/>Compliance ingestion"]
     end
 
-    subgraph "☁️ GCP Infrastructure"
-        TF["Terraform<br/>c2d-standard-32<br/>AMD Milan HPC"]
-        AR["Artifact Registry<br/>signed Docker images"]
-        GCS["GCS Data Lake<br/>raw / results / logs"]
+    subgraph "🔬 MLOps Pipeline — Bayesian Training"
+        direction TB
+        INGEST["📥 Data Ingestion<br/>dataset_ingestion.py<br/>GCS raw/ → local .h5<br/>HDF5 integrity check"]
+        PARALLEL["⚡ Parallel Preprocessing<br/>parallel_execution.py<br/>32-core scatter/gather<br/>Global Z-Score: μ,σ<br/>Phase 1: Σx,Σx²,N<br/>Phase 2: μ,σ atomic<br/>Phase 3: Parquet shards"]
+        LMDB["🗄️ LMDB Generation<br/>Low-latency tensor I/O<br/>Unit-based split<br/>X_s(14) + A(4) sensors"]
+        SHIM["🔧 Vendor Patch Engine<br/>vendor_patch_engine.py<br/>5 interception points<br/>CUDA→CPU, Adam→ClippedAdam<br/>particles 1→8, q_scale 0.004→0.01"]
+        TRAIN["🧠 Bayesian Training<br/>execution_controller.py<br/>BigCeption InceptionNet<br/>Flipout VI, 8 particles<br/>Gaussian Mean-Field + Radial<br/>ELBO normalized loss<br/>Softplus RUL ≥ 0"]
     end
 
-    subgraph "🔐 Compliance"
-        SIG["Sigstore/Cosign<br/>keyless signing"]
-        PROV["provenance.json<br/>immutable birth certificate"]
-        STER["SafeTensors<br/>zero-RCE weights"]
+    subgraph "📡 Streaming Pipeline — Real-Time Inference"
+        direction TB
+        STAGE["📦 Node 0: Staging<br/>ds02-006-preprocessing.py<br/>Parquet artifacts →<br/>streaming workspace<br/>Atomic file sync"]
+        PROD["🚀 Node 1: Producer<br/>producer.py<br/>Multi-unit fleet simulator<br/>ThreadPoolExecutor<br/>CPU affinity pinning<br/>Time-warp undersampling<br/>10-50x speed factors<br/>Redpanda topic: ncmapss_telemetry"]
+        CONS["🧠 Node 2: Consumer<br/>consumer.py<br/>Bayesian inference engine<br/>Dual-domain Z-Score recovery<br/>30-cycle sliding window<br/>DuckDB persistent sink<br/>Fail-closed: Redpanda down → exit"]
+        DASH["📊 Node 3: Dashboard<br/>dashboard.py<br/>Streamlit + st.fragment<br/>RUL manifold visualization<br/>Uncertainty σ quantification<br/>LOWESS smoothing<br/>15 FPS lock-free DuckDB"]
+    end
+
+    subgraph "🗄️ Data Warehouse"
+        DBT["🔨 dbt Transformations<br/>Medallion architecture<br/>staging → intermediate → marts<br/>fct_engine_health_per_cycle<br/>rpt_safety_alerts<br/>rpt_engine_pnl<br/>physics_validation tests"]
+        BIGQ["☁️ BigQuery External Tables<br/>Zero-copy analytics<br/>Hive-partitioned Parquet"]
+    end
+
+    subgraph "☁️ GCP Infrastructure — Terraform IaC"
+        direction TB
+        TF["🏗️ Terraform Modules<br/>_bootstrap: GCS backend<br/>hpc-training-env: KMS+IAM<br/>ephemeral-hpc-worker:<br/>c2d-standard-32 template<br/>AMD Milan, pd-ssd<br/>startup.sh.tftpl:<br/>serial console tee"]
+        AR["📦 Artifact Registry<br/>rul-factory repo<br/>Signed Docker images<br/>cosign attestation"]
+        GCS["🪣 GCS Data Lake<br/>ncmapss-data-lake-<PROJECT><br/>raw/ — NASA .h5 files<br/>results/ — training outputs<br/>logs/ — audit telemetry<br/>quarantine/ — crash forensics"]
+    end
+
+    subgraph "🔐 Security & Compliance"
+        direction TB
+        STER["🧹 artifact_sterilizer.py<br/>pickle → SafeTensors<br/>Zero RCE vectors<br/>.ckpt/.pt → .safetensors"]
+        SIGN["✍️ cryptographic_signer.py<br/>cosign sign-blob<br/>OIDC workload identity<br/>→ .sig + .cert files"]
+        PROV["📋 provenance_generator.py<br/>Model Birth Certificate<br/>SHA-256 data lineage<br/>Git commit + env + HW<br/>→ provenance.json"]
     end
 
     subgraph "📊 Observability"
-        DASH["Streamlit Sentinel<br/>RUL + uncertainty"]
-        LOGS["Cloud Logging<br/>serial console tee"]
-        DUCK["DuckDB<br/>analytical sink"]
+        LOGS["📝 Cloud Logging<br/>serial console tee<br/>startup.sh: 2>&1 | tee /dev/ttyS0<br/>journalctl forensic capture<br/>ISO 8601 timestamps"]
+        TENSOR["📈 TensorBoard<br/>Training events<br/>Loss curves<br/>Uncertainty metrics"]
     end
 
-    NASA --> RF
-    RF --> TF
-    TF --> AR
-    RF --> SIG
-    SIG --> STER
-    STER --> PROV
+    NASA --> INGEST
+    INGEST --> PARALLEL
+    PARALLEL --> LMDB
+    LMDB --> SHIM
+    SHIM --> TRAIN
+
+    NASA --> STAGE
+    STAGE --> PROD
+    PROD --> CONS
+    CONS --> DASH
+
+    TRAIN --> STER
+    STER --> SIGN
+    SIGN --> PROV
     PROV --> GCS
-    SP --> DUCK
-    DUCK --> DASH
-    LOGS --> GCS
+
+    TRAIN --> TF
+    TF --> AR
+    AR --> TRAIN
+
+    CONS --> DBT
+    PROD --> BIGQ
+
+    TRAIN --> LOGS
+    TRAIN --> TENSOR
+    CONS --> LOGS
+    PROD --> LOGS
+    STAGE --> LOGS
+
+    DORA --> GCS
+    EURLEX --> GCS
 
     style NASA fill:#1a1a2e,stroke:#16213e,color:#eee
     style DORA fill:#1a1a2e,stroke:#16213e,color:#eee
-    style RF fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style SP fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style IS fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style TF fill:#ff6b35,stroke:#ff8c42,color:#fff
-    style AR fill:#ff6b35,stroke:#ff8c42,color:#fff
-    style GCS fill:#ff6b35,stroke:#ff8c42,color:#fff
-    style SIG fill:#8b0000,stroke:#ff4444,color:#fff
-    style PROV fill:#8b0000,stroke:#ff4444,color:#fff
-    style STER fill:#8b0000,stroke:#ff4444,color:#fff
+    style EURLEX fill:#1a1a2e,stroke:#16213e,color:#eee
+    style INGEST fill:#0f3460,stroke:#1a1a8e,color:#eee
+    style PARALLEL fill:#0f3460,stroke:#1a1a8e,color:#eee
+    style LMDB fill:#0f3460,stroke:#1a1a8e,color:#eee
+    style SHIM fill:#b8860b,stroke:#daa520,color:#fff
+    style TRAIN fill:#533483,stroke:#7b2ff7,color:#eee
+    style STAGE fill:#1a1a2e,stroke:#16213e,color:#eee
+    style PROD fill:#0f3460,stroke:#1a1a8e,color:#eee
+    style CONS fill:#533483,stroke:#7b2ff7,color:#eee
     style DASH fill:#1b4332,stroke:#40916c,color:#eee
-    style LOGS fill:#1b4332,stroke:#40916c,color:#eee
-    style DUCK fill:#1b4332,stroke:#40916c,color:#eee
+    style DBT fill:#ff694b,stroke:#ff8c69,color:#fff
+    style BIGQ fill:#4285f4,stroke:#6ba0f5,color:#fff
+    style TF fill:#7b42bc,stroke:#9b6fd4,color:#fff
+    style AR fill:#7b42bc,stroke:#9b6fd4,color:#fff
+    style GCS fill:#4285f4,stroke:#6ba0f5,color:#fff
+    style STER fill:#8b0000,stroke:#ff4444,color:#fff
+    style SIGN fill:#8b0000,stroke:#ff4444,color:#fff
+    style PROV fill:#8b0000,stroke:#ff4444,color:#fff
+    style LOGS fill:#555,stroke:#888,color:#fff
+    style TENSOR fill:#555,stroke:#888,color:#fff
 ```
 
 <br>
@@ -175,32 +284,27 @@ A Bayesian model says: *"Engine #7 has 42 ± 8 cycles left. I'm 68% confident."*
 
 When the engine enters an unknown flight regime (high-G maneuvers, unusual temperature profiles), the Bayesian uncertainty **spikes**. The maintenance crew is alerted: *"We don't know — check it."* This is the difference between a false sense of security and a genuine safety system.
 
-### Model Architecture: BigCeption
+### Model: BigCeption
 
-<div align="center">
-<table>
-<tr><th>Component</th><th>Specification</th></tr>
-<tr><td>Architecture</td><td>Bayesian InceptionNet (Conv1D + Dense Variational layers)</td></tr>
-<tr><td>Inference Method</td><td><b>Flipout</b> Variational Inference (8 particles)</td></tr>
-<tr><td>Prior</td><td>Gaussian Mean-Field + <b>Radial</b> (multi-modal)</td></tr>
-<tr><td>Input Window</td><td>30 time-steps × 14 sensors (X_s) + auxiliary (A)</td></tr>
-<tr><td>Output</td><td>RUL (cycles) + σ (epistemic uncertainty)</td></tr>
-<tr><td>Activation</td><td>Softplus (physical positivity constraint: RUL ≥ 0)</td></tr>
-<tr><td>Loss</td><td>ELBO normalized: 1/(dataset × window × features)</td></tr>
-<tr><td>Scoring</td><td>NASA Asymmetric Penalty: 1/5 (underest.) vs 1/13 (overest.)</td></tr>
-</table>
-</div>
+| Component | Specification |
+|---|---|
+| Architecture | Bayesian InceptionNet (Conv1D + Dense Variational layers) |
+| Inference Method | **Flipout** Variational Inference (8 particles) |
+| Prior | Gaussian Mean-Field + **Radial** (multi-modal) |
+| Input Window | 30 time-steps × 14 sensors (X_s) + 4 auxiliary (A) |
+| Output | RUL (cycles) + σ (epistemic uncertainty) |
+| Activation | Softplus (physical positivity: RUL ≥ 0) |
+| Loss | ELBO normalized: 1/(dataset × window × features) |
+| Scoring | NASA Asymmetric Penalty: 1/5 (underest.) vs 1/13 (overest.) |
 
 ### Global Z-Score Standardization
 
-Unlike batch normalization, we compute **global** mean and variance across ALL datasets before training. This ensures the model sees a unified feature space regardless of which engine is being evaluated — critical for cross-fleet generalization.
-
 ```mermaid
 flowchart LR
-    H5["10× .h5 files<br/>(TB-scale)"] --> P1["Phase 1: Sequential scan<br/>Global Σx, Σx², N"]
-    P1 --> P2["Phase 2: Atomic μ, σ<br/>across entire population"]
-    P2 --> P3["Phase 3: Parallel Z-score<br/>(x-μ)/σ → Parquet shards<br/>ProcessPoolExecutor"]
-    P3 --> LMDB["LMDB<br/>low-latency tensor I/O"]
+    H5["10× .h5 files<br/>TB-scale"] --> P1["Phase 1<br/>Sequential scan<br/>Global Σx, Σx², N"]
+    P1 --> P2["Phase 2<br/>Atomic μ, σ<br/>across all data"]
+    P2 --> P3["Phase 3<br/>Parallel Z-score<br/>(x-μ)/σ → Parquet<br/>ProcessPoolExecutor"]
+    P3 --> LMDB["LMDB<br/>low-latency I/O"]
 
     style H5 fill:#1a1a2e,stroke:#16213e,color:#eee
     style P1 fill:#0f3460,stroke:#1a1a8e,color:#eee
@@ -213,7 +317,7 @@ flowchart LR
 
 ## 🛡️ The Shim Layer In Detail
 
-The Adaptive Shim intercepts the vendor code at **five critical points**:
+The Adaptive Shim intercepts vendor code at **five surgical points**:
 
 | # | Interception Point | Method | Why |
 |---|---|---|---|
@@ -230,79 +334,95 @@ The Adaptive Shim intercepts the vendor code at **five critical points**:
 ```
 n-cmapss-agentic-factory/
 ├── 📄 README.md                          ← YOU ARE HERE
-├── 📄 pyproject.toml                     ← uv monorepo root
+├── 📄 pyproject.toml                     ← uv monorepo root (3 workspace members)
 ├── 📄 manifest.yaml                      ← project-wide metadata
 │
-├── 🧠 rul-model-factory/                 ← BAYESIAN TRAINING ENGINE
+├── 🧠 rul-model-factory/                 ← MLOps PIPELINE — BAYESIAN TRAINING
 │   ├── pyproject.toml
-│   ├── README.md                         ← model training docs
+│   ├── README.md
+│   ├── artifacts/runs/                   ← signed & provenanced models
+│   │   ├── rul_bayesian_20260420T0650Z_cpu_hpc/  (Standard, 3h)
+│   │   └── rul_bayesian_20260421T1251Z_cpu_hpc/  (Deep Research, 18h)
 │   └── src/rul_model_factory/
 │       ├── cloud_trainer/
-│       │   ├── execution_controller.py   ← main entry: state machine
+│       │   ├── execution_controller.py   ← State machine: train → sterilize → sign → upload
 │       │   ├── core/
-│       │   │   ├── vendor_patch_engine.py   ← THE SHIM (monkeypatches)
-│       │   │   ├── feature_engineering.py   ← data prep + GCS sync
+│       │   │   ├── vendor_patch_engine.py   ← THE SHIM: 5 monkeypatch points
+│       │   │   ├── feature_engineering.py   ← HDF5 → Parquet/LMDB, GCS sync
 │       │   │   └── parallel_execution.py    ← ProcessPoolExecutor workers
 │       │   ├── security/
 │       │   │   ├── artifact_sterilizer.py   ← pickle → SafeTensors
 │       │   │   ├── cryptographic_signer.py  ← cosign sign-blob
-│       │   │   └── provenance_generator.py  ← model birth certificate
+│       │   │   └── provenance_generator.py  ← birth certificate JSON
 │       │   └── logistics/
-│       │       ├── path_resolver.py         ← SSOT filesystem map
-│       │       └── artifact_uploader.py     ← GCS sync + signing
-│       └── vendor/                      ← research code (IMMUTABLE)
-│           └── bayesrul/                ← arthurviens/bayesrul
+│       │       ├── path_resolver.py         ← SSOT filesystem mapping
+│       │       └── artifact_uploader.py     ← GCS sync with signing gate
+│       └── vendor/                      ← RESEARCH CODE (IMMUTABLE)
+│           └── bayesrul/                ← github.com/arthurviens/bayesrul
 │
-├── 📡 streaming_pipeline/               ← REAL-TIME INFERENCE
+├── 📡 streaming_pipeline/               ← STREAMING PIPELINE — REAL-TIME INFERENCE
 │   ├── README.md
 │   └── src/streaming_pipeline/
-│       ├── ds02-006-preprocessing.py    ← Node 0: data staging
-│       ├── producer.py                  ← Node 1: fleet simulator
-│       ├── consumer.py                  ← Node 2: Bayesian inference
-│       ├── dashboard.py                 ← Node 3: Streamlit sentinel
-│       └── models.py                    ← BigCeption architecture
+│       ├── ds02-006-preprocessing.py    ← Node 0: Parquet staging → local workspace
+│       ├── producer.py                  ← Node 1: Fleet simulator → Redpanda
+│       ├── consumer.py                  ← Node 2: Bayesian inference → DuckDB
+│       ├── dashboard.py                 ← Node 3: Streamlit Sentinel dashboard
+│       ├── models.py                    ← BigCeption architecture definition
+│       └── config.py                    ← Pipeline configuration
 │
-├── 🏗️ infrastructure-setup/              ← IAC + ORCHESTRATION
+├── 🏗️ infrastructure-setup/              ← INFRASTRUCTURE AS CODE
 │   ├── terraform/
-│   │   ├── live/_bootstrap/             ← GCS backend (state locking)
-│   │   ├── live/hpc-training-env/       ← KMS + IAM + project setup
-│   │   └── modules/ephemeral-hpc-worker/ ← c2d-standard-32 template
-│   ├── docker/hpc-training-worker/      ← Dockerfile + requirements
+│   │   ├── live/_bootstrap/             ← GCS backend + state locking
+│   │   ├── live/hpc-training-env/       ← KMS (90-day rotation) + IAM + project
+│   │   └── modules/ephemeral-hpc-worker/ ← c2d-standard-32, pd-ssd, startup scripts
+│   ├── docker/hpc-training-worker/      ← Dockerfile (non-root, Python 3.10-slim)
+│   ├── docker/redpanda/                 ← docker-compose.yml for local streaming
 │   ├── scripts/
-│   │   ├── pipeline-orchestrator.sh     ← full training cycle
-│   │   ├── streaming-pipeline-orchestrator.sh ← streaming cycle
+│   │   ├── pipeline-orchestrator.sh     ← Full training: Terraform→Data→Docker→HPC→Harvest
+│   │   ├── streaming-pipeline-orchestrator.sh ← Full streaming: Staging→Producer→Consumer→Dashboard
 │   │   ├── worker-provisioning.sh       ← GCE instance dispatch
 │   │   ├── image-build-publish.sh       ← Docker build + cosign sign
-│   │   ├── artifact-synchronization.sh  ← GCS → local harvest
-│   │   └── data-lake-ingestion.sh       ← raw data → GCS
+│   │   ├── artifact-synchronization.sh  ← GCS → local harvest with normalization
+│   │   ├── data-lake-ingestion.sh       ← Raw HDF5 → GCS bucket
+│   │   └── compliance-sync.sh           ← EU legal texts → workspace
 │   └── src/infrastructure_setup/
-│       ├── data_logistics/              ← dataset download + unzip
-│       └── compliance_ops/              ← DORA regulation scraper
+│       ├── data_logistics/dataset_ingestion.py    ← NASA ZIP download + unzip
+│       └── compliance_ops/dora_compliance_scraper.py ← DORA article scraper
 │
-├── 📊 dashboard/                        ← Streamlit config
-├── 🗄️ dwh/dbt/                           ← dbt dimensional models
-├── 📓 notebooks/                        ← EDA + research
-├── 📋 specs/                            ← API contracts + schemas
-├── 🗺️ blueprints/                       ← architecture decisions
-└── 🔧 config/                           ← YAML configs (dev/prod/topics)
+├── 🗄️ dwh/dbt/                           ← DATA WAREHOUSE
+│   ├── dbt_project.yml
+│   ├── models/
+│   │   ├── staging/stg_telemetry.sql     ← Raw → typed
+│   │   ├── intermediate/int_telemetry_normalized.sql
+│   │   ├── marts/fct_engine_health_per_cycle.sql  ← Fact table
+│   │   └── marts/reports/               ← rpt_safety_alerts, rpt_engine_pnl
+│   ├── macros/                          ← flight_distance, fuel_density, iso_corrections
+│   └── seeds/fuel_prices.csv            ← Reference data
+│
+├── 📊 dashboard/                        ← Streamlit configuration
+├── 📓 notebooks/                        ← Jupyter EDA & research notebooks
+├── 📋 specs/                            ← API contracts, dataset dictionary, path specs
+├── 🗺️ blueprints/                       ← Architecture Decision Records
+└── 🔧 config/                           ← YAML configs: base, dev, prod, topics
 ```
 
 <br>
 
 ## 🚀 Quick Start
 
-### Full Streaming Pipeline (Local)
+### Local Streaming Pipeline
 
 ```bash
 # One command: staging → streaming → inference → dashboard
 ./infrastructure-setup/scripts/streaming-pipeline-orchestrator.sh
 ```
 
-This launches:
-1. **Node 0** — Parquet staging from HDF5
-2. **Node 1** — Redpanda fleet simulator (multi-engine, time-warped)
-3. **Node 2** — Bayesian inference consumer (30-cycle sliding window)
-4. **Node 3** — Streamlit dashboard (RUL + uncertainty visualization)
+| Node | Script | Role |
+|---|---|---|
+| 0 | `ds02-006-preprocessing.py` | Parquet staging from HDF5 |
+| 1 | `producer.py` | Redpanda fleet simulator (multi-engine, time-warped) |
+| 2 | `consumer.py` | Bayesian inference (30-cycle window, DuckDB sink) |
+| 3 | `dashboard.py` | Streamlit Sentinel (RUL + uncertainty visualization) |
 
 ### Cloud Training (GCP HPC)
 
@@ -313,13 +433,11 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 # Full cycle: Terraform → data → Docker → HPC → harvest
 ./infrastructure-setup/scripts/pipeline-orchestrator.sh
 
-# Skip preprocessing (reuse from previous run):
+# Skip 18-minute preprocessing (reuse from previous run):
 ./infrastructure-setup/scripts/pipeline-orchestrator.sh -f bayesian-20260419-20df59
 ```
 
 ### Manual Artifact Recovery
-
-If the orchestrator crashes after training but before sync:
 
 ```bash
 ./infrastructure-setup/scripts/artifact-synchronization.sh \
@@ -334,20 +452,24 @@ If the orchestrator crashes after training but before sync:
 | Metric | Standard Run (3h) | Deep Research Run (18h) |
 |---|---|---|
 | **Artifact** | [20260420T0650Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc) | [20260421T1251Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc) |
-| **Learning Rate** | `1e-4` | `3e-5` (High Precision) |
-| **Bayesian Particles** | `1` | `8` (Enhanced Posterior) |
+| **Learning Rate** | `1e-4` | `3e-5` |
+| **Bayesian Particles** | `1` | `8` |
 | **Pretrain Epochs** | `10` | `25` |
 | **Hardware** | c2d-standard-32 (AMD Milan) | c2d-standard-32 (AMD Milan) |
 
-> **The Deep Research Run** provides significantly more stable uncertainty quantification due to 8-particle Flipout approximation. Default for high-risk diagnostic scenarios.
+<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/a260c968-b9eb-4d94-ba18-3f075463e227" />
+
+<img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
+<img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
+<img width="1470" height="956" alt="Screenshot 2026-04-21 at 08 55 05" src="https://github.com/user-attachments/assets/e912ab6d-85c2-4f53-ac9b-d8896ca59e2e" />
+
+> The **Deep Research Run** provides significantly more stable uncertainty quantification due to 8-particle Flipout approximation. Default for high-risk diagnostic scenarios.
 
 <br>
 
 ## 📋 Compliance & Audit Trail
 
 ### Per-Run Artifacts
-
-Every training cycle produces:
 
 ```
 artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
@@ -359,7 +481,7 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
 │   ├── provenance.json             ← BIRTH CERTIFICATE
 │   └── *.hparams.yaml              ← hyperparameters
 ├── 🧠 model/
-│   └── *.model.safetensors         ← SAFE weights (no pickle)
+│   └── *.model.safetensors         ← SAFE weights (zero-RCE)
 └── 🔐 security/
     ├── *.model.sig                  ← Cosign signature
     ├── *.model.cert                 ← Cosign certificate
@@ -367,7 +489,7 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
     └── provenance.json.cert        ← manifest certificate
 ```
 
-### provenance.json — The Birth Certificate
+### provenance.json
 
 ```json
 {
@@ -400,16 +522,21 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
 
 Per NASA N-CMAPSS specification:
 
-| Category | Count | Features |
+| Category | Count | Sensor Names |
 |---|---|---|
 | **X_s** (Measurements) | 14 | T24, T30, T48, T50, P15, P2, P21, P24, Ps30, P40, Wf, Nf, Nc, BPR |
 | **X_v** (Virtual) | 14 | Efficiencies, Flow Modifiers (derived from X_s) |
 | **A** (Auxiliary) | 4 | Flight Condition (Fc), Health State (hs), altitude, Mach |
 | **W** (Scenario) | 4 | alt, Mach, TRA, T2 — environmental context |
 
-**Our model uses:** `[X_s, A]` — 14 physical sensors + auxiliary flight data.
+**Our model input:** `[X_s, A]` — 14 physical sensors + 4 auxiliary flight condition features.
 
-**Validation strategy:** Unit-based splitting (entire engine lifecycles held out), not random shuffling. This prevents data leakage between engines.
+**Validation strategy:** Unit-based splitting — entire engine lifecycles are held out, not random samples. This prevents data leakage between engines in the same fleet.
+
+**Datasets used:**
+- Training: `DS02-006` (primary), expandable to all 10 subsets
+- Each `.h5` file contains multiple engine units with full run-to-failure trajectories
+- Flight classes: 1 (short-haul), 2 (medium-haul), 3 (long-haul) — different degradation patterns
 
 <br>
 
@@ -422,76 +549,7 @@ Per NASA N-CMAPSS specification:
 | **Artifact Registry** | `roles/artifactregistry.reader` | Pull signed images only |
 | **Compute Engine** | `roles/compute.instanceAdmin.v1` | Self-termination only |
 
-All containers run as **non-root UID 1000**. The application never gains root.
-
-<br>
-
-## 🧰 Technology Stack
-
-<div align="center">
-<table>
-<tr>
-<td width="33%" align="center">
-
-### 🧠 AI/ML
-- PyTorch 2.x
-- PyTorch Lightning
-- Bayesian VI (Flipout)
-- SafeTensors
-- NVIDIA CUDA → CPU shim
-
-</td>
-<td width="33%" align="center">
-
-### 📡 Streaming
-- Redpanda (Kafka-compatible)
-- DuckDB (analytical sink)
-- PySpark Structured Streaming
-- Parquet + Hive partitioning
-
-</td>
-<td width="33%" align="center">
-
-### 🏗️ Infrastructure
-- Terraform (IaC)
-- GCP Compute Engine (c2d-standard-32)
-- Docker (non-root)
-- Artifact Registry
-- Cloud Storage (GCS)
-
-</td>
-</tr>
-<tr>
-<td align="center">
-
-### 🔐 Security
-- Sigstore/Cosign (keyless signing)
-- SafeTensors (zero-RCE)
-- provenance.json (immutable)
-- KMS key rotation (90-day)
-
-</td>
-<td align="center">
-
-### 📊 Observability
-- Streamlit dashboard
-- TensorBoard
-- Cloud Logging (serial tee)
-- DuckDB point-in-time snapshots
-
-</td>
-<td align="center">
-
-### 🛠️ Dev Tools
-- uv (monorepo manager)
-- Python 3.10+
-- Hatchling build system
-- GitHub Actions CI/CD
-
-</td>
-</tr>
-</table>
-</div>
+All containers run as **non-root UID 1000**. The application logic never gains root. Docker builds use strict `.dockerignore` denying all by default.
 
 <br>
 
@@ -515,16 +573,16 @@ All containers run as **non-root UID 1000**. The application never gains root.
 
 ## 🗺️ Technical Roadmap
 
-| Phase | Task | Status |
-|---|---|---|
-| **Config** | Move `MASTER_CONFIG_MAP` to `config/golden_bayesian.yaml` | 📋 Backlog |
-| **Provenance** | SHA-256 deep verification in artifact sync | 📋 Backlog |
-| **IAM** | Custom self-deletion role (no `instanceAdmin` wildcard) | 📋 Backlog |
-| **Network** | Private subnet + Cloud NAT (remove public IPs) | 📋 Backlog |
-| **Scaling** | Terragrunt for multi-env (Dev/Staging/Prod) | 📋 Backlog |
-| **Logistics** | Marker-based root discovery (replace `parents[5]`) | 📋 Backlog |
-| **Sterilization** | Support legacy `.pt` artifacts in sterilizer | 📋 Backlog |
-| **Normalization** | Dynamic Z-score from YAML metadata (inference parity) | 📋 Backlog |
+| Task | Status |
+|---|---|
+| Move `MASTER_CONFIG_MAP` to `config/golden_bayesian.yaml` | 📋 Backlog |
+| SHA-256 deep verification in artifact sync | 📋 Backlog |
+| Custom self-deletion IAM role (no `instanceAdmin` wildcard) | 📋 Backlog |
+| Private subnet + Cloud NAT (remove public IPs) | 📋 Backlog |
+| Terragrunt for multi-env (Dev/Staging/Prod) | 📋 Backlog |
+| Marker-based root discovery (replace `parents[5]` path resolver) | 📋 Backlog |
+| Support legacy `.pt` artifacts in sterilizer | 📋 Backlog |
+| Dynamic Z-score from YAML metadata (100% training-inference parity) | 📋 Backlog |
 
 <br>
 
@@ -532,14 +590,14 @@ All containers run as **non-root UID 1000**. The application never gains root.
 
 - **Factory code:** Apache 2.0 © 2026 Stan_Buren
 - **bayesrul research code:** [github.com/arthurviens/bayesrul](https://github.com/arthurviens/bayesrul) — MIT License
-- **NASA N-CMAPSS dataset:** Public domain (NASA Open Data)
+- **NASA N-CMAPSS dataset:** Public domain (NASA Open Data) — [PHM Datasets](https://phm-datasets.s3.amazonaws.com/NASA/17.+Turbofan+Engine+Degradation+Simulation+Data+Set+.zip)
 
 <br>
 
 <p align="center">
-  <sub>Built with obsessive attention to detail. Every pickle purged, every artifact signed, every provenance manifest generated.</sub>
+  <sub>Every pickle purged. Every artifact signed. Every provenance manifest generated.</sub>
 </p>
 
 <p align="center">
-  <sub>V12.1.0 | Stan_Buren | 2026</sub>
+  <sub>V12.1.0 · Stan_Buren · 2026</sub>
 </p>
