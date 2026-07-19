@@ -4,7 +4,8 @@
 
 ### *Make Bayesian CNN Research Code Face the EU AI Act*
 
-safely training ML in GCP using Docker on HPC 32 core instance with full Logs observability. 
+by safely training ML in GCP using Docker on HPC 32 core instance with full Logs observability. 
+
 Put it in a **real time telemetry** pipeline that **predicts RUL** (Remaining Useful Life) of the aircraft.
 
 BUT you are **not allowed** to edit a single line of the original researcher code.
@@ -61,7 +62,7 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 ---
 
-> *Legenda* Ok, company wants me to use their researcher code and build a **MLOps pipeline** from scratch. And train **ML** on **CPU** in **GCP**. But original code is written for **CUDA** and **local GPU's**. And there will be some **compliance audit** on it, so I need to implement **logs transparency**, add **Sigstore**, replace insecure .ckpt with **SafeTensors**. 
+> ***Legenda*** Ok, company wants me to use their researcher code and build a **MLOps pipeline** from scratch. And train **ML** on **CPU** in **GCP**. But original code is written for **CUDA** and **local GPU's**. And there will be some **compliance audit** on it, so I need to implement **logs transparency**, add **Sigstore**, replace insecure .ckpt with **SafeTensors**. 
 
 ---
 
@@ -76,8 +77,10 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 ### 🔬 What the Researcher Gave Me
 
-**Brilliant Bayesian algorithm**
+**Brilliant Bayesian algorithm.**
+
 **But: no provenance. No audit trail. No safety.**
+
 **It won't survive a critical infrastructure compliance audit.**
 
 </td>
@@ -103,60 +106,7 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 ## 🏗️ Architecture
 
-<img width="941" height="1672" alt="architecture" src="https://github.com/user-attachments/assets/b135b29f-003b-44a5-8d96-0b32906587ac" />
-
-<br>
-
-## 🧠 The Solution: Adaptive Shim Architecture
-
-**We cannot edit the research code.** So we built a surgical interception layer — a **Shim** — that sits between the researcher's logic and the industrial runtime. The Shim monkeypatches CUDA calls, replaces insecure serialization, injects cryptographic signing, and enforces CPU-only execution — all without modifying a single line of `bayesrul`.
-
-<img width="736" height="1438" alt="Gemini_Generated_Image_qnskm1qnskm1qnsk" src="https://github.com/user-attachments/assets/8d0e24d8-7255-4a04-8e06-2f6bd3fc40bb" />
-
-<br>
-
-## 🏗️ System Architecture: 4-Node Lifecycle
-
-A full-stack streaming pipeline from raw NASA telemetry to real-time Bayesian inference:
-
-```mermaid
-graph LR
-    subgraph "Node 0: Staging"
-        A["📦 NASA HDF5<br/>10 flight datasets<br/>DS01-008"] --> B["⚙️ Parallel Processor<br/>32-core scatter/gather<br/>ProcessPoolExecutor"]
-        B --> C["🧹 Parquet/LMDB<br/>Global Z-Score normalized<br/>Unit-based train/test split"]
-    end
-
-    subgraph "Node 1: Streamer"
-        D["🚀 Multi-Unit Fleet Simulator<br/>Redpanda/Kafka-compatible<br/>ThreadPoolExecutor<br/>CPU Affinity<br/>Time-Warp undersampling"]
-    end
-
-    subgraph "Node 2: Inference"
-        E["🧠 Bayesian BigCeption<br/>Flipout VI, 8 particles<br/>Dual-domain Z-Score recovery<br/>30-cycle sliding window<br/>DuckDB persistent sink"]
-    end
-
-    subgraph "Node 3: Sentinel"
-        F["📊 Streamlit Dashboard<br/>RUL manifold visualization<br/>Uncertainty σ quantification<br/>LOWESS scientific smoothing<br/>15 FPS lock-free DuckDB mirror"]
-    end
-
-    C --> D
-    D --> E
-    E -->|"DuckDB (WAL)"| F
-
-    style A fill:#1a1a2e,stroke:#16213e,color:#eee
-    style B fill:#1a1a2e,stroke:#16213e,color:#eee
-    style C fill:#1a1a2e,stroke:#16213e,color:#eee
-    style D fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style E fill:#533483,stroke:#7b2ff7,color:#eee
-    style F fill:#1b4332,stroke:#40916c,color:#eee
-```
-
-<br>
-
-## 🔐 Security: The Trilateral Protocol
-
-Every model that leaves the factory passes through three mandatory gates. None can be skipped:
-
-<img width="736" height="1438" alt="Gemini_Generated_Image_15vv9815vv9815vv" src="https://github.com/user-attachments/assets/fbbb9623-a59b-449b-9310-10d36bdb5bcb" />
+<img width="1041" height="1772" alt="architecture" src="https://github.com/user-attachments/assets/b135b29f-003b-44a5-8d96-0b32906587ac" />
 
 <br>
 
