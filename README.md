@@ -74,8 +74,6 @@ MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down t
 
 ---
 
-<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/a260c968-b9eb-4d94-ba18-3f075463e227" />
-
 <br>
 
 ## 🎯 The Challenge
@@ -171,115 +169,9 @@ Every model that leaves the factory passes through three mandatory gates. None c
 
 <br>
 
-## 🏗️ Architecture
+## 📉 Dashboard
 
-**This is the complete project architecture.** Every data source, every processing stage, every storage layer, every output:
-
-```mermaid
-graph TB
-    subgraph "📦 Data Sources"
-        direction TB
-        NASA["🛩️ NASA N-CMAPSS<br/>10 HDF5 datasets<br/>DS01-005 through DS08d-010<br/>Turbofan Engine Degradation<br/>Simulation Data Set 2"]
-        DORA["📜 EU DORA Regulation<br/>XML scraper<br/>(Digital Operational<br/>Resilience Act articles)"]
-        EURLEX["⚖️ EUR-Lex Cellar API<br/>EU AI Act legal texts<br/>Compliance ingestion"]
-    end
-
-    subgraph "🔬 MLOps Pipeline — Bayesian Training"
-        direction TB
-        INGEST["📥 Data Ingestion<br/>dataset_ingestion.py<br/>GCS raw/ → local .h5<br/>HDF5 integrity check"]
-        PARALLEL["⚡ Parallel Preprocessing<br/>parallel_execution.py<br/>32-core scatter/gather<br/>Global Z-Score: μ,σ<br/>Phase 1: Σx,Σx²,N<br/>Phase 2: μ,σ atomic<br/>Phase 3: Parquet shards"]
-        LMDB["🗄️ LMDB Generation<br/>Low-latency tensor I/O<br/>Unit-based split<br/>X_s(14) + A(4) sensors"]
-        SHIM["🔧 Vendor Patch Engine<br/>vendor_patch_engine.py<br/>5 interception points<br/>CUDA→CPU, Adam→ClippedAdam<br/>particles 1→8, q_scale 0.004→0.01"]
-        TRAIN["🧠 Bayesian Training<br/>execution_controller.py<br/>BigCeption InceptionNet<br/>Flipout VI, 8 particles<br/>Gaussian Mean-Field + Radial<br/>ELBO normalized loss<br/>Softplus RUL ≥ 0"]
-    end
-
-    subgraph "📡 Streaming Pipeline — Real-Time Inference"
-        direction TB
-        STAGE["📦 Node 0: Staging<br/>ds02-006-preprocessing.py<br/>Parquet artifacts →<br/>streaming workspace<br/>Atomic file sync"]
-        PROD["🚀 Node 1: Producer<br/>producer.py<br/>Multi-unit fleet simulator<br/>ThreadPoolExecutor<br/>CPU affinity pinning<br/>Time-warp undersampling<br/>10-50x speed factors<br/>Redpanda topic: ncmapss_telemetry"]
-        CONS["🧠 Node 2: Consumer<br/>consumer.py<br/>Bayesian inference engine<br/>Dual-domain Z-Score recovery<br/>30-cycle sliding window<br/>DuckDB persistent sink<br/>Fail-closed: Redpanda down → exit"]
-        DASH["📊 Node 3: Dashboard<br/>dashboard.py<br/>Streamlit + st.fragment<br/>RUL manifold visualization<br/>Uncertainty σ quantification<br/>LOWESS smoothing<br/>15 FPS lock-free DuckDB"]
-    end
-
-    subgraph "🗄️ Data Warehouse"
-        DBT["🔨 dbt Transformations<br/>Medallion architecture<br/>staging → intermediate → marts<br/>fct_engine_health_per_cycle<br/>rpt_safety_alerts<br/>rpt_engine_pnl<br/>physics_validation tests"]
-        BIGQ["☁️ BigQuery External Tables<br/>Zero-copy analytics<br/>Hive-partitioned Parquet"]
-    end
-
-    subgraph "☁️ GCP Infrastructure — Terraform IaC"
-        direction TB
-        TF["🏗️ Terraform Modules<br/>_bootstrap: GCS backend<br/>hpc-training-env: KMS+IAM<br/>ephemeral-hpc-worker:<br/>c2d-standard-32 template<br/>AMD Milan, pd-ssd<br/>startup.sh.tftpl:<br/>serial console tee"]
-        AR["📦 Artifact Registry<br/>rul-factory repo<br/>Signed Docker images<br/>cosign attestation"]
-        GCS["🪣 GCS Data Lake<br/>ncmapss-data-lake-<PROJECT><br/>raw/ — NASA .h5 files<br/>results/ — training outputs<br/>logs/ — audit telemetry<br/>quarantine/ — crash forensics"]
-    end
-
-    subgraph "🔐 Security & Compliance"
-        direction TB
-        STER["🧹 artifact_sterilizer.py<br/>pickle → SafeTensors<br/>Zero RCE vectors<br/>.ckpt/.pt → .safetensors"]
-        SIGN["✍️ cryptographic_signer.py<br/>cosign sign-blob<br/>OIDC workload identity<br/>→ .sig + .cert files"]
-        PROV["📋 provenance_generator.py<br/>Model Birth Certificate<br/>SHA-256 data lineage<br/>Git commit + env + HW<br/>→ provenance.json"]
-    end
-
-    subgraph "📊 Observability"
-        LOGS["📝 Cloud Logging<br/>serial console tee<br/>startup.sh: 2>&1 | tee /dev/ttyS0<br/>journalctl forensic capture<br/>ISO 8601 timestamps"]
-        TENSOR["📈 TensorBoard<br/>Training events<br/>Loss curves<br/>Uncertainty metrics"]
-    end
-
-    NASA --> INGEST
-    INGEST --> PARALLEL
-    PARALLEL --> LMDB
-    LMDB --> SHIM
-    SHIM --> TRAIN
-
-    NASA --> STAGE
-    STAGE --> PROD
-    PROD --> CONS
-    CONS --> DASH
-
-    TRAIN --> STER
-    STER --> SIGN
-    SIGN --> PROV
-    PROV --> GCS
-
-    TRAIN --> TF
-    TF --> AR
-    AR --> TRAIN
-
-    CONS --> DBT
-    PROD --> BIGQ
-
-    TRAIN --> LOGS
-    TRAIN --> TENSOR
-    CONS --> LOGS
-    PROD --> LOGS
-    STAGE --> LOGS
-
-    DORA --> GCS
-    EURLEX --> GCS
-
-    style NASA fill:#1a1a2e,stroke:#16213e,color:#eee
-    style DORA fill:#1a1a2e,stroke:#16213e,color:#eee
-    style EURLEX fill:#1a1a2e,stroke:#16213e,color:#eee
-    style INGEST fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style PARALLEL fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style LMDB fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style SHIM fill:#b8860b,stroke:#daa520,color:#fff
-    style TRAIN fill:#533483,stroke:#7b2ff7,color:#eee
-    style STAGE fill:#1a1a2e,stroke:#16213e,color:#eee
-    style PROD fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style CONS fill:#533483,stroke:#7b2ff7,color:#eee
-    style DASH fill:#1b4332,stroke:#40916c,color:#eee
-    style DBT fill:#ff694b,stroke:#ff8c69,color:#fff
-    style BIGQ fill:#4285f4,stroke:#6ba0f5,color:#fff
-    style TF fill:#7b42bc,stroke:#9b6fd4,color:#fff
-    style AR fill:#7b42bc,stroke:#9b6fd4,color:#fff
-    style GCS fill:#4285f4,stroke:#6ba0f5,color:#fff
-    style STER fill:#8b0000,stroke:#ff4444,color:#fff
-    style SIGN fill:#8b0000,stroke:#ff4444,color:#fff
-    style PROV fill:#8b0000,stroke:#ff4444,color:#fff
-    style LOGS fill:#555,stroke:#888,color:#fff
-    style TENSOR fill:#555,stroke:#888,color:#fff
-```
+<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/a260c968-b9eb-4d94-ba18-3f075463e227" />
 
 <br>
 
