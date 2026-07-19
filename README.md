@@ -132,69 +132,6 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 <br>
 
-## 🔬 The Bayesian Engine
-
-### Why Bayesian?
-
-A frequentist model says: *"Engine #7 has 42 cycles left."*  
-A Bayesian model says: *"Engine #7 has 42 ± 8 cycles left. I'm 68% confident."*
-
-When the engine enters an unknown flight regime (high-G maneuvers, unusual temperature profiles), the Bayesian uncertainty **spikes**. The maintenance crew is alerted: *"We don't know — check it."* This is the difference between a false sense of security and a genuine safety system.
-
-### Model: BigCeption
-
-| Component | Specification |
-|---|---|
-| Architecture | Bayesian InceptionNet (Conv1D + Dense Variational layers) |
-| Inference Method | **Flipout** Variational Inference (8 particles) |
-| Prior | Gaussian Mean-Field + **Radial** (multi-modal) |
-| Input Window | 30 time-steps × 14 sensors (X_s) + 4 auxiliary (A) |
-| Output | RUL (cycles) + σ (epistemic uncertainty) |
-| Activation | Softplus (physical positivity: RUL ≥ 0) |
-| Loss | ELBO normalized: 1/(dataset × window × features) |
-| Scoring | NASA Asymmetric Penalty: 1/5 (underest.) vs 1/13 (overest.) |
-
-### Global Z-Score Standardization
-
-```mermaid
-flowchart LR
-    H5["10× .h5 files<br/>TB-scale"] --> P1["Phase 1<br/>Sequential scan<br/>Global Σx, Σx², N"]
-    P1 --> P2["Phase 2<br/>Atomic μ, σ<br/>across all data"]
-    P2 --> P3["Phase 3<br/>Parallel Z-score<br/>(x-μ)/σ → Parquet<br/>ProcessPoolExecutor"]
-    P3 --> LMDB["LMDB<br/>low-latency I/O"]
-
-    style H5 fill:#1a1a2e,stroke:#16213e,color:#eee
-    style P1 fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style P2 fill:#0f3460,stroke:#1a1a8e,color:#eee
-    style P3 fill:#533483,stroke:#7b2ff7,color:#eee
-    style LMDB fill:#1b4332,stroke:#40916c,color:#eee
-```
-
-<br>
-
-## 🛡️ Now we're prepared
-
-| # | Interception Point | File | Method | What Was Adapted |
-|---|---|---|---|---|
-| 1 | `torch.device("cuda:0")` | `patcher.py` | Metaclass `__new__` + `sys.modules` sweep | The research code is tightly coupled to CUDA.<br>Shim intercepts the creation of device objects at the metaclass level: any call to `torch.device("cuda:X")` returns `cpu`.<br>Additionally, iterates through ALL already loaded modules and replaces their local references with `torch.device`.<br>Without this, a non-GPU HPC node crashes on the first call. |
-| 2 | `torch.cuda.is_available()` | `patcher.py` | Direct assignment `= lambda: False` | Even after replacing device, many libraries (Pyro, PyTorch Lightning) check `is_available()` before initialization.<br>We force it to return `False` before any code has a chance to call the CUDA driver. |
-| 3 | `pl.Trainer(gpus=...)` | `patcher.py` | Monkeypatch `__init__` | Lightning tries to use the GPU by default.<br>Shim intercepts the constructor: removes `gpus`, sets `accelerator='cpu'`, `devices=1`.<br>Adds `StabilityCallback` - detects NaN/Inf in the loss and aborts training with `sys.exit(1)`, instead of silently generating broken checkpoints. |
-| 4 | `pyro.optim.ClippedAdam` → `Adam` | `patcher.py` | `sys.modules` redirection | The research code uses `pyro.optim.ClippedAdam`, a Bayesian wrapper over Adam.<br>It is unstable on CPU with large batches.<br>Shim replaces the module: when `ClippedAdam` is imported, the standard `torch.optim.Adam` is returned. |
-| 5 | `DataLoader(num_workers=0)` | `patcher.py` | Monkeypatch `__init__` | The research code creates a DataLoader with `num_workers=0` (single-threaded).<br>Shim intercepts and sets `num_workers = cpu_count // 2` for parallel data loading on a 32-core HPC node. |
-| 6 | `vi.VI_BNN.__init__` — Bayesian defaults | `patcher.py` | Monkeypatch `__init__` | Research defaults are weak: `num_particles=1` (one particle is essentially a regular neural network), `q_scale=0.004` (prior is too narrow).<br>Shim forces: `num_particles=8`, `q_scale=0.01`, `prior=0.2`.<br>Adds Leaky ReLU to protect against dying neurons in deep Bayesian layers.<br>LR is capped at `0.0002` for CPU safety. |
-| 7 | `NCMAPSSDataModule.__init__` — paths | `patcher.py` | Monkeypatch `__init__` | Research code reads data from hardcoded local paths.<br>Shim redirects to a factory-controlled sandbox (`processed/lmdb`), synchronized with GCS. |
-| 8 | `VIBnnWrapper.__init__` — batch size | `patcher.py` | Monkeypatch `__init__` | Research `batch_size=10000` causes an OOM on the CPU.<br>Shim implements "Steel Guardian": a dynamic cap of 2560 samples, regardless of the config value. |
-| 9 | `VIBnnWrapper.training_step` — NaN guard | `patcher.py` | Monkeypatch methods | After each training step, Shim checks `mse/train` in callback metrics.<br>If NaN, it crashes and preserves forensic telemetry. |
-| 10 | `compute_scalers` → parallel | `patcher.py` | Complete function replacement | Research code calculates the Z-score in a single thread: sequential scan of 10 HDF5 files → ~40 minutes.<br>Shim replaces `ProcessPoolExecutor`: parallel scattering across all cores → ~2 minutes. |
-| 11 | `generate_parquet` → parallel | `patcher.py` | Complete function replacement | Same story: Parquet shard generation is done via `ProcessPoolExecutor` instead of a single-threaded loop. |
-| 12 | `generate_lmdb` → factory version | `patcher.py` | Complete function replacement | The research LMDB generator does not support unit-based splitting.<br>Shim uses its own implementation with `RobustMinMaxAggregate`, protection against empty shards, and physical isolation of engine units. |
-| 13 | `get_proportion_lists(device=...)` | `patcher.py` | Function-level patch | The research implementation of uncertainty quantification calls `y_true.device`, which can be `meta` or `None` on a CPU node.<br>Shim forces `device='cpu'` and creates tensors on the CPU. |
-| 14 | `argparse` paths | `patcher.py` | `parse_args` mock injection | The research CLI accepts `--data-path`, `--out-path`, etc.<br>Shim intercepts `parse_args()` and replaces all paths with a factory-controlled sandbox: `raw_data/`, `processed/`, `results/`. |
-
----
-
-<br>
-
 ## 📂 Repository Structure
 
 ```
@@ -274,54 +211,6 @@ n-cmapss-agentic-factory/
 
 <br>
 
-## 🚀 Quick Start
-
-### Part 1. Cloud Training (GCP HPC)
-
-```bash
-export GCP_PROJECT_ID="your-project"
-export DATASET_ID="N-CMAPSS_DS02-006"
-
-# Full cycle: Terraform → data → Docker → HPC → harvest
-./infrastructure-setup/scripts/pipeline-orchestrator.sh
-
-# Or simply Skip 18-minute preprocessing (reuse from previous run):
-./infrastructure-setup/scripts/pipeline-orchestrator.sh -f bayesian-20260419-20df59
-```
-
-### Part 2. Manual Artifact Recovery
-
-```bash
-./infrastructure-setup/scripts/artifact-synchronization.sh \
-  "ncmapss-factory-worker-20260420-2206" \
-  "runs/bayesian-20260420-0e405c"
-```
-
-### Part 3. Launch Streaming Pipeline
-
-```bash
-# One command: staging → streaming → inference → dashboard
-./infrastructure-setup/scripts/streaming-pipeline-orchestrator.sh
-```
-
-<br>
-
-## 🏆 Model Training Benchmarks
-
-| Metric | Standard Run (3h) | Deep Research Run (18h) |
-|---|---|---|
-| **Artifact** | [20260420T0650Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc) | [20260421T1251Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc) |
-| **Learning Rate** | `1e-4` | `3e-5` |
-| **Bayesian Particles** | `1` | `8` |
-| **Pretrain Epochs** | `10` | `25` |
-| **Hardware** | c2d-standard-32 (AMD Milan) | c2d-standard-32 (AMD Milan) |
-
-<img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
-<img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
-<img width="1470" height="956" alt="Screenshot 2026-04-21 at 08 55 05" src="https://github.com/user-attachments/assets/e912ab6d-85c2-4f53-ac9b-d8896ca59e2e" />
-
-<br>
-
 ## 📋 Compliance & Audit Trail
 
 ### Per-Run Artifacts
@@ -373,6 +262,133 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
 
 <br>
 
+## 🛡️ TERRAFORM IAM & Least Privilege
+
+| Service | IAM Role | Scope |
+|---|---|---|
+| **GCS Storage** | `roles/storage.objectAdmin` | Bucket-scoped (not project-wide) |
+| **Cloud Logging** | `roles/logging.logWriter` | Write-only (no read access) |
+| **Artifact Registry** | `roles/artifactregistry.reader` | Pull signed images only |
+| **Compute Engine** | `roles/compute.instanceAdmin.v1` | Self-termination only |
+
+All containers run as **non-root UID 1000**. The application logic never gains root. Docker builds use strict `.dockerignore` denying all by default.
+
+<br>
+
+## 🛡️ Transforma the researcher code:
+
+| # | Interception Point | File | Method | What Was Adapted |
+|---|---|---|---|---|
+| 1 | `torch.device("cuda:0")` | `patcher.py` | Metaclass `__new__` + `sys.modules` sweep | The research code is tightly coupled to CUDA.<br>Shim intercepts the creation of device objects at the metaclass level: any call to `torch.device("cuda:X")` returns `cpu`.<br>Additionally, iterates through ALL already loaded modules and replaces their local references with `torch.device`.<br>Without this, a non-GPU HPC node crashes on the first call. |
+| 2 | `torch.cuda.is_available()` | `patcher.py` | Direct assignment `= lambda: False` | Even after replacing device, many libraries (Pyro, PyTorch Lightning) check `is_available()` before initialization.<br>We force it to return `False` before any code has a chance to call the CUDA driver. |
+| 3 | `pl.Trainer(gpus=...)` | `patcher.py` | Monkeypatch `__init__` | Lightning tries to use the GPU by default.<br>Shim intercepts the constructor: removes `gpus`, sets `accelerator='cpu'`, `devices=1`.<br>Adds `StabilityCallback` - detects NaN/Inf in the loss and aborts training with `sys.exit(1)`, instead of silently generating broken checkpoints. |
+| 4 | `pyro.optim.ClippedAdam` → `Adam` | `patcher.py` | `sys.modules` redirection | The research code uses `pyro.optim.ClippedAdam`, a Bayesian wrapper over Adam.<br>It is unstable on CPU with large batches.<br>Shim replaces the module: when `ClippedAdam` is imported, the standard `torch.optim.Adam` is returned. |
+| 5 | `DataLoader(num_workers=0)` | `patcher.py` | Monkeypatch `__init__` | The research code creates a DataLoader with `num_workers=0` (single-threaded).<br>Shim intercepts and sets `num_workers = cpu_count // 2` for parallel data loading on a 32-core HPC node. |
+| 6 | `vi.VI_BNN.__init__` — Bayesian defaults | `patcher.py` | Monkeypatch `__init__` | Research defaults are weak: `num_particles=1` (one particle is essentially a regular neural network), `q_scale=0.004` (prior is too narrow).<br>Shim forces: `num_particles=8`, `q_scale=0.01`, `prior=0.2`.<br>Adds Leaky ReLU to protect against dying neurons in deep Bayesian layers.<br>LR is capped at `0.0002` for CPU safety. |
+| 7 | `NCMAPSSDataModule.__init__` — paths | `patcher.py` | Monkeypatch `__init__` | Research code reads data from hardcoded local paths.<br>Shim redirects to a factory-controlled sandbox (`processed/lmdb`), synchronized with GCS. |
+| 8 | `VIBnnWrapper.__init__` — batch size | `patcher.py` | Monkeypatch `__init__` | Research `batch_size=10000` causes an OOM on the CPU.<br>Shim implements "Steel Guardian": a dynamic cap of 2560 samples, regardless of the config value. |
+| 9 | `VIBnnWrapper.training_step` — NaN guard | `patcher.py` | Monkeypatch methods | After each training step, Shim checks `mse/train` in callback metrics.<br>If NaN, it crashes and preserves forensic telemetry. |
+| 10 | `compute_scalers` → parallel | `patcher.py` | Complete function replacement | Research code calculates the Z-score in a single thread: sequential scan of 10 HDF5 files → ~40 minutes.<br>Shim replaces `ProcessPoolExecutor`: parallel scattering across all cores → ~2 minutes. |
+| 11 | `generate_parquet` → parallel | `patcher.py` | Complete function replacement | Same story: Parquet shard generation is done via `ProcessPoolExecutor` instead of a single-threaded loop. |
+| 12 | `generate_lmdb` → factory version | `patcher.py` | Complete function replacement | The research LMDB generator does not support unit-based splitting.<br>Shim uses its own implementation with `RobustMinMaxAggregate`, protection against empty shards, and physical isolation of engine units. |
+| 13 | `get_proportion_lists(device=...)` | `patcher.py` | Function-level patch | The research implementation of uncertainty quantification calls `y_true.device`, which can be `meta` or `None` on a CPU node.<br>Shim forces `device='cpu'` and creates tensors on the CPU. |
+| 14 | `argparse` paths | `patcher.py` | `parse_args` mock injection | The research CLI accepts `--data-path`, `--out-path`, etc.<br>Shim intercepts `parse_args()` and replaces all paths with a factory-controlled sandbox: `raw_data/`, `processed/`, `results/`. |
+
+---
+
+## 🛡️ Now we're prepared. 
+
+---
+
+<br>
+
+## 🚀 Quick Start
+
+### Part 1. Cloud Training (GCP HPC)
+
+```bash
+export GCP_PROJECT_ID="your-project"
+export DATASET_ID="N-CMAPSS_DS02-006"
+
+# Full cycle: Terraform → data → Docker → HPC → harvest
+./infrastructure-setup/scripts/pipeline-orchestrator.sh
+
+# Or simply Skip 18-minute preprocessing (reuse from previous run):
+./infrastructure-setup/scripts/pipeline-orchestrator.sh -f bayesian-20260419-20df59
+```
+
+### Part 2. Manual Artifact Recovery
+
+```bash
+./infrastructure-setup/scripts/artifact-synchronization.sh \
+  "ncmapss-factory-worker-20260420-2206" \
+  "runs/bayesian-20260420-0e405c"
+```
+
+### Part 3. Launch Streaming Pipeline
+
+```bash
+# One command: staging → streaming → inference → dashboard
+./infrastructure-setup/scripts/streaming-pipeline-orchestrator.sh
+```
+
+<br>
+
+## 🏆 Model Training Benchmarks
+
+| Metric | Standard Run (3h) | Deep Research Run (18h) |
+|---|---|---|
+| **Artifact** | [20260420T0650Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc) | [20260421T1251Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc) |
+| **Learning Rate** | `1e-4` | `3e-5` |
+| **Bayesian Particles** | `1` | `8` |
+| **Pretrain Epochs** | `10` | `25` |
+| **Hardware** | c2d-standard-32 (AMD Milan) | c2d-standard-32 (AMD Milan) |
+
+<img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
+<img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
+<img width="1470" height="956" alt="Screenshot 2026-04-21 at 08 55 05" src="https://github.com/user-attachments/assets/e912ab6d-85c2-4f53-ac9b-d8896ca59e2e" />
+
+<br>
+
+## 🔬 The Bayesian Engine
+
+### Why Bayesian?
+
+A frequentist model says: *"Engine #7 has 42 cycles left."*  
+A Bayesian model says: *"Engine #7 has 42 ± 8 cycles left. I'm 68% confident."*
+
+When the engine enters an unknown flight regime (high-G maneuvers, unusual temperature profiles), the Bayesian uncertainty **spikes**. The maintenance crew is alerted: *"We don't know — check it."* This is the difference between a false sense of security and a genuine safety system.
+
+### Model: BigCeption
+
+| Component | Specification |
+|---|---|
+| Architecture | Bayesian InceptionNet (Conv1D + Dense Variational layers) |
+| Inference Method | **Flipout** Variational Inference (8 particles) |
+| Prior | Gaussian Mean-Field + **Radial** (multi-modal) |
+| Input Window | 30 time-steps × 14 sensors (X_s) + 4 auxiliary (A) |
+| Output | RUL (cycles) + σ (epistemic uncertainty) |
+| Activation | Softplus (physical positivity: RUL ≥ 0) |
+| Loss | ELBO normalized: 1/(dataset × window × features) |
+| Scoring | NASA Asymmetric Penalty: 1/5 (underest.) vs 1/13 (overest.) |
+
+### Global Z-Score Standardization
+
+```mermaid
+flowchart LR
+    H5["10× .h5 files<br/>TB-scale"] --> P1["Phase 1<br/>Sequential scan<br/>Global Σx, Σx², N"]
+    P1 --> P2["Phase 2<br/>Atomic μ, σ<br/>across all data"]
+    P2 --> P3["Phase 3<br/>Parallel Z-score<br/>(x-μ)/σ → Parquet<br/>ProcessPoolExecutor"]
+    P3 --> LMDB["LMDB<br/>low-latency I/O"]
+
+    style H5 fill:#1a1a2e,stroke:#16213e,color:#eee
+    style P1 fill:#0f3460,stroke:#1a1a8e,color:#eee
+    style P2 fill:#0f3460,stroke:#1a1a8e,color:#eee
+    style P3 fill:#533483,stroke:#7b2ff7,color:#eee
+    style LMDB fill:#1b4332,stroke:#40916c,color:#eee
+```
+<br>
+
 ## 🔬 N-CMAPSS Features analysis
 
 Per NASA N-CMAPSS specification:
@@ -392,19 +408,6 @@ Per NASA N-CMAPSS specification:
 - Training: `DS02-006` (primary), expandable to all 10 subsets
 - Each `.h5` file contains multiple engine units with full run-to-failure trajectories
 - Flight classes: 1 (short-haul), 2 (medium-haul), 3 (long-haul) — different degradation patterns
-
-<br>
-
-## 🛡️ TERRAFORM IAM & Least Privilege
-
-| Service | IAM Role | Scope |
-|---|---|---|
-| **GCS Storage** | `roles/storage.objectAdmin` | Bucket-scoped (not project-wide) |
-| **Cloud Logging** | `roles/logging.logWriter` | Write-only (no read access) |
-| **Artifact Registry** | `roles/artifactregistry.reader` | Pull signed images only |
-| **Compute Engine** | `roles/compute.instanceAdmin.v1` | Self-termination only |
-
-All containers run as **non-root UID 1000**. The application logic never gains root. Docker builds use strict `.dockerignore` denying all by default.
 
 <br>
 
