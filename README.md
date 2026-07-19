@@ -24,20 +24,35 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 <!-- ═══════════════════════ TECH STACK ═══════════════════════ -->
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-Bayesian_V1-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.11-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
 ![SafeTensors](https://img.shields.io/badge/SafeTensors-zero_RCE-00C7B7?style=for-the-badge)
-![Apache Spark](https://img.shields.io/badge/PySpark-4.1.1-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)
-![Apache Iceberg](https://img.shields.io/badge/Iceberg-Lakehouse-1E90FF?style=for-the-badge&logo=apache&logoColor=white)
-![dbt](https://img.shields.io/badge/dbt-Dimensional_Marts-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/DuckDB-Analytical_DWH-FFF000?style=for-the-badge&logo=duckdb&logoColor=black)
+![dbt](https://img.shields.io/badge/dbt-1.11-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.56-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 
-![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
-![Redpanda](https://img.shields.io/badge/Redpanda-Kafka_Compatible-FF5500?style=for-the-badge&logo=apachekafka&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Hermetic_Builds-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Redpanda](https://img.shields.io/badge/Redpanda-Kafka_API-FF5500?style=for-the-badge&logo=apachekafka&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Non_Root-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
 ![GCP](https://img.shields.io/badge/GCP-Compute_Engine-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)
-![Sigstore](https://img.shields.io/badge/Cosign-Keyless_Signing-000000?style=for-the-badge&logo=sigstore&logoColor=white)
+![Cosign](https://img.shields.io/badge/Cosign-Keyless_Signing-000000?style=for-the-badge&logo=sigstore&logoColor=white)
+![loguru](https://img.shields.io/badge/loguru-Structured_Logs-3D3D3D?style=for-the-badge)
+
+<br/>
+
+<!-- ═══════════════════════ VITALS ═══════════════════════ -->
+
+![uv](https://img.shields.io/badge/monorepo-3_workspace_members-blue?style=flat-square&logo=astral&logoColor=white)
+![Python](https://img.shields.io/badge/python-3.13-blue?style=flat-square&logo=python&logoColor=white)
+![Shell](https://img.shields.io/badge/orchestration-7_bash_scripts-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform_modules-3-7B42BC?style=flat-square&logo=terraform&logoColor=white)
+![Streamlit](https://img.shields.io/badge/dashboard-Streamlit_Sentinel-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
+
+![HDF5](https://img.shields.io/badge/NASA_datasets-10_HDF5_files-8B4513?style=flat-square)
+![h5py](https://img.shields.io/badge/h5py-3.16-teal?style=flat-square)
+![Polars](https://img.shields.io/badge/Polars-1.40-1E90FF?style=flat-square&logo=polars&logoColor=white)
+![Parquet](https://img.shields.io/badge/Parquet-pyarrow-50ABF1?style=flat-square)
+![YAML](https://img.shields.io/badge/config-YAML_SSOT-CB171E?style=flat-square&logo=yaml&logoColor=white)
 
 <br/>
 
