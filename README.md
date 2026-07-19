@@ -64,7 +64,6 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 <a href="#-compliance-audit-trail">Compliance</a> ·
 <a href="#-terraform-infrastructure-3-layer-architecture">Terraform</a> ·
 <a href="#-transforma-the-researcher-code">Shim Layer</a> ·
-<a href="#-now-were-prepared">CI/CD Flow</a> ·
 <a href="#-quick-start">Quick Start</a> ·
 <a href="#-working-process">Working Process</a> ·
 <a href="#-the-bayesian-engine">Bayesian Engine</a> ·
@@ -333,7 +332,8 @@ flowchart TD
 All containers run as **non-root UID 1000**. The application logic never gains root. Docker builds use strict `.dockerignore` denying all by default. Boot disk encrypted with KMS CMEK key (90-day rotation).
 
 <br>
-## 🛡️ Transform the researcher code:
+
+## 🛡️ Patch the researcher code to face the production requirements:
 
 | # | Interception Point | File | Method | What Was Adapted |
 |---|---|---|---|---|
@@ -354,7 +354,7 @@ All containers run as **non-root UID 1000**. The application logic never gains r
 
 ---
 
-## 🛡️ Now we're prepared. 
+## 🛡️ Now we're set. Prepared. And ready for HPC training.
 
 ---
 
