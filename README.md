@@ -106,7 +106,8 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 
 ## 🏗️ Architecture
 
-<img width="1141" height="1872" alt="architecture" src="https://github.com/user-attachments/assets/b135b29f-003b-44a5-8d96-0b32906587ac" />
+<img width="1224" height="1736" alt="architecture" src="https://github.com/user-attachments/assets/f8d76748-bfc3-42f6-bb84-3eaa065f5372" />
+
 
 <br>
 
@@ -165,8 +166,7 @@ The Adaptive Shim intercepts vendor code at **five surgical points**:
 | 1 | `torch.device("cuda:0")` | Metaclass `__new__` interception | Forces CPU-only: no CUDA runtime crashes on HPC |
 | 2 | `pl.Trainer(gpus=...)` | Monkeypatch `__init__` | Redirects `accelerator='cpu'`, strips GPU kwargs |
 | 3 | `ClippedAdam` → `Adam` | `sys.modules` redirection | Vendor wraps Adam; we unwrap for stability |
-| 4 | `particles=1 → 8`, `q_scale=0.004 → 0.01` | Config override in `MASTER_CONFIG_MAP` | Research defaults are weak; industrial needs high-fidelity posteriors |
-| 5 | `get_proportion_lists(device=...)` | Function-level patch | Forces CPU uncertainty quantification, prevents device mismatch |
+| 4 | `get_proportion_lists(device=...)` | Function-level patch | Forces CPU uncertainty quantification, prevents device mismatch |
 
 <br>
 
@@ -301,8 +301,6 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 <img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
 <img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
 <img width="1470" height="956" alt="Screenshot 2026-04-21 at 08 55 05" src="https://github.com/user-attachments/assets/e912ab6d-85c2-4f53-ac9b-d8896ca59e2e" />
-
-> The **Deep Research Run** provides significantly more stable uncertainty quantification due to 8-particle Flipout approximation. Default for high-risk diagnostic scenarios.
 
 <br>
 
