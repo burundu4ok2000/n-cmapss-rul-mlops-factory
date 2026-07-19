@@ -112,6 +112,12 @@ MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down t
 
 <br>
 
+## 🏗️ Architecture
+
+<img width="941" height="1672" alt="architecture" src="https://github.com/user-attachments/assets/b135b29f-003b-44a5-8d96-0b32906587ac" />
+
+<br>
+
 ## 🧠 The Solution: Adaptive Shim Architecture
 
 **We cannot edit the research code.** So we built a surgical interception layer — a **Shim** — that sits between the researcher's logic and the industrial runtime. The Shim monkeypatches CUDA calls, replaces insecure serialization, injects cryptographic signing, and enforces CPU-only execution — all without modifying a single line of `bayesrul`.
@@ -165,7 +171,7 @@ Every model that leaves the factory passes through three mandatory gates. None c
 
 <br>
 
-## 📊 Full Architecture Map
+## 🏗️ Architecture
 
 **This is the complete project architecture.** Every data source, every processing stage, every storage layer, every output:
 
