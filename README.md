@@ -74,6 +74,8 @@ MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down t
 
 ---
 
+<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/a260c968-b9eb-4d94-ba18-3f075463e227" />
+
 <br>
 
 ## 🎯 The Challenge
@@ -457,8 +459,6 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 | **Pretrain Epochs** | `10` | `25` |
 | **Hardware** | c2d-standard-32 (AMD Milan) | c2d-standard-32 (AMD Milan) |
 
-<img width="1470" height="956" alt="Screenshot 2026-04-20 at 18 05 20" src="https://github.com/user-attachments/assets/a260c968-b9eb-4d94-ba18-3f075463e227" />
-
 <img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
 <img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
 <img width="1470" height="956" alt="Screenshot 2026-04-21 at 08 55 05" src="https://github.com/user-attachments/assets/e912ab6d-85c2-4f53-ac9b-d8896ca59e2e" />
@@ -540,7 +540,7 @@ Per NASA N-CMAPSS specification:
 
 <br>
 
-## 🛡️ IAM & Least Privilege
+## 🛡️ TERRAFORM IAM & Least Privilege
 
 | Service | IAM Role | Scope |
 |---|---|---|
@@ -568,21 +568,6 @@ All containers run as **non-root UID 1000**. The application logic never gains r
 | **Batch Safety** | Fixed 10,000 (OOM risk) | Dynamic cap @ 2,560 |
 | **Validation** | Random split | Unit-based (engine-level isolation) |
 | **Audit** | Print statements | Structured logs + serial console tee |
-
-<br>
-
-## 🗺️ Technical Roadmap
-
-| Task | Status |
-|---|---|
-| Move `MASTER_CONFIG_MAP` to `config/golden_bayesian.yaml` | 📋 Backlog |
-| SHA-256 deep verification in artifact sync | 📋 Backlog |
-| Custom self-deletion IAM role (no `instanceAdmin` wildcard) | 📋 Backlog |
-| Private subnet + Cloud NAT (remove public IPs) | 📋 Backlog |
-| Terragrunt for multi-env (Dev/Staging/Prod) | 📋 Backlog |
-| Marker-based root discovery (replace `parents[5]` path resolver) | 📋 Backlog |
-| Support legacy `.pt` artifacts in sterilizer | 📋 Backlog |
-| Dynamic Z-score from YAML metadata (100% training-inference parity) | 📋 Backlog |
 
 <br>
 
