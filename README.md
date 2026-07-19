@@ -334,15 +334,7 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 
 <br>
 
-## 🏆 Model Training Benchmarks
-
-| Metric | Standard Run (3h) | Deep Research Run (18h) |
-|---|---|---|
-| **Artifact** | [20260420T0650Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260420T0650Z_cpu_hpc) | [20260421T1251Z](./rul-model-factory/artifacts/runs/rul_bayesian_20260421T1251Z_cpu_hpc) |
-| **Learning Rate** | `1e-4` | `3e-5` |
-| **Bayesian Particles** | `1` | `8` |
-| **Pretrain Epochs** | `10` | `25` |
-| **Hardware** | c2d-standard-32 (AMD Milan) | c2d-standard-32 (AMD Milan) |
+## 🛠️ Working process
 
 <img width="1470" height="956" alt="Screenshot 2026-04-19 at 18 40 20" src="https://github.com/user-attachments/assets/df467775-d798-4e7e-84ae-edfc63e286d9" />
 <img width="1470" height="956" alt="Screenshot 2026-04-19 at 19 38 31" src="https://github.com/user-attachments/assets/04946e97-78cd-4154-a16a-509ec3461435" />
@@ -350,9 +342,11 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 
 <br>
 
+# Scientific stuff 
+
 ## 🔬 The Bayesian Engine
 
-### Why Bayesian?
+### What is it Bayesian CNN?
 
 A frequentist model says: *"Engine #7 has 42 cycles left."*  
 A Bayesian model says: *"Engine #7 has 42 ± 8 cycles left. I'm 68% confident."*
