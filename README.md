@@ -98,20 +98,8 @@ graph LR
 
 Every model that leaves the factory passes through three mandatory gates:
 
-```mermaid
-flowchart LR
-    CKPT["🧠 PyTorch Checkpoint<br/>(.ckpt, pickle format)"] --> STERILE
-    STERILE["🧹 STERILIZE<br/>Pickle → SafeTensors<br/>Zero RCE vectors"] --> SIGN
-    SIGN["✍️ SIGN<br/>Cosign keyless signing<br/>OIDC workload identity<br/>→ .sig + .cert"] --> PROV
-    PROV["📋 PROVENANCE<br/>Data lineage SHA-256<br/>Git commit + env + HW<br/>→ provenance.json"] --> REG
-    REG["📦 REGISTER<br/>GCS bucket<br/>Immutable. Auditable. Verifiable."]
+<img width="736" height="1438" alt="Gemini_Generated_Image_15vv9815vv9815vv" src="https://github.com/user-attachments/assets/fbbb9623-a59b-449b-9310-10d36bdb5bcb" />
 
-    style CKPT fill:#555,stroke:#888,color:#fff
-    style STERILE fill:#8b0000,stroke:#ff4444,color:#fff
-    style SIGN fill:#8b0000,stroke:#ff4444,color:#fff
-    style PROV fill:#8b0000,stroke:#ff4444,color:#fff
-    style REG fill:#006400,stroke:#44ff44,color:#fff
-```
 
 <br>
 
