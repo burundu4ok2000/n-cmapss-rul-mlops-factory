@@ -261,21 +261,7 @@ n-cmapss-agentic-factory/
 
 ## 🚀 Quick Start
 
-### Local Streaming Pipeline
-
-```bash
-# One command: staging → streaming → inference → dashboard
-./infrastructure-setup/scripts/streaming-pipeline-orchestrator.sh
-```
-
-| Node | Script | Role |
-|---|---|---|
-| 0 | `ds02-006-preprocessing.py` | Parquet staging from HDF5 |
-| 1 | `producer.py` | Redpanda fleet simulator (multi-engine, time-warped) |
-| 2 | `consumer.py` | Bayesian inference (30-cycle window, DuckDB sink) |
-| 3 | `dashboard.py` | Streamlit Sentinel (RUL + uncertainty visualization) |
-
-### Cloud Training (GCP HPC)
+### Part 1. Cloud Training (GCP HPC)
 
 ```bash
 export GCP_PROJECT_ID="your-project"
@@ -284,16 +270,23 @@ export DATASET_ID="N-CMAPSS_DS02-006"
 # Full cycle: Terraform → data → Docker → HPC → harvest
 ./infrastructure-setup/scripts/pipeline-orchestrator.sh
 
-# Skip 18-minute preprocessing (reuse from previous run):
+# Or simply Skip 18-minute preprocessing (reuse from previous run):
 ./infrastructure-setup/scripts/pipeline-orchestrator.sh -f bayesian-20260419-20df59
 ```
 
-### Manual Artifact Recovery
+### Part 2. Manual Artifact Recovery
 
 ```bash
 ./infrastructure-setup/scripts/artifact-synchronization.sh \
   "ncmapss-factory-worker-20260420-2206" \
   "runs/bayesian-20260420-0e405c"
+```
+
+### Part 3. Launch Streaming Pipeline
+
+```bash
+# One command: staging → streaming → inference → dashboard
+./infrastructure-setup/scripts/streaming-pipeline-orchestrator.sh
 ```
 
 <br>
@@ -365,7 +358,7 @@ artifacts/runs/rul_bayesian_YYYYMMDDTHHMMZ_cpu_hpc/
 
 <br>
 
-## 🔬 Aeronautical Feature Space
+## 🔬 N-CMAPSS Features analysis
 
 Per NASA N-CMAPSS specification:
 
@@ -400,23 +393,6 @@ All containers run as **non-root UID 1000**. The application logic never gains r
 
 <br>
 
-## 📊 vs. Original Research Code
-
-| Feature | `bayesrul` (Research) | This Factory (Industrial) |
-|---|---|---|
-| **Hardware** | Hardcoded `cuda:0` | Software-Defined (CPU/GPU via shim) |
-| **Environment** | Local Conda/Pip | Hermetic Docker (immutable) |
-| **Serialization** | `pickle` (.ckpt) | `SafeTensors` (.safetensors) |
-| **Ingestion** | Sequential (single thread) | Parallel (ProcessPoolExecutor, 32-core) |
-| **Scaling** | Mini-batch normalization | Global Z-Score (cross-fleet) |
-| **Config** | Ephemeral CLI args | Audited Master Config (SSOT) |
-| **Provenance** | None | Cryptographically signed manifest |
-| **Uncertainty** | 1 particle MFVI | 8-particle Flipout + Radial |
-| **Batch Safety** | Fixed 10,000 (OOM risk) | Dynamic cap @ 2,560 |
-| **Validation** | Random split | Unit-based (engine-level isolation) |
-| **Audit** | Print statements | Structured logs + serial console tee |
-
-<br>
 
 ## 📝 License & Attribution
 
