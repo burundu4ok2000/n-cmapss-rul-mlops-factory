@@ -90,7 +90,7 @@ BUT you are **not allowed** to edit a single line of the original researcher cod
 <tr>
 <td width="50%" align="center">
 
-### 🔬 What the Researcher Gave Me
+### 🔬 What the Researcher Gave Us
 
 **Brilliant Bayesian algorithm.**
 
