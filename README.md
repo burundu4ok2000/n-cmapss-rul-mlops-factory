@@ -22,26 +22,17 @@
 <tr>
 <td width="50%" align="center">
 
-### 🔬 What the Researcher Gave Us
+### 🔬 What the researcher Gave me
 
-```python
-# Works on GPU 0. Only GPU 0.
-torch.device("cuda:0")
-
-# Model weights? Pickle. 
-# (Arbitrary code execution, anyone?)
-torch.save(model, "model.ckpt")
-
-# Logs? Print statements.
-print("loss:", loss)
-```
-
+**Brilliant Bayesian algorythm**
+**But**
 **No provenance. No audit trail. No safety.**
+**It won't survive critical infrastructure compliance audit**
 
 </td>
 <td width="50%" align="center">
 
-### 🏭 What the EU AI Act Demands
+### 🏭 What need to be build?
 
 <table>
 <tr><td>🔐</td><td>No arbitrary code execution (pickle → SafeTensors)</td></tr>
@@ -63,59 +54,8 @@ print("loss:", loss)
 
 **We cannot edit the research code.** So we built a surgical interception layer — a **Shim** — that sits between the researcher's logic and the industrial runtime. The Shim monkeypatches CUDA calls, replaces insecure serialization, injects cryptographic signing, and enforces CPU-only execution — all without modifying a single line of `bayesrul`.
 
-```mermaid
-graph TB
-    subgraph "Researcher's Code (IMMUTABLE)"
-        RC1["bayesrul/ncmapss/train_model.py"]
-        RC2["bayesrul/ncmapss/preprocessing.py"]
-        RC3["bayesrul/utils/metrics.py"]
-    end
+<img width="736" height="1438" alt="Gemini_Generated_Image_qnskm1qnskm1qnsk" src="https://github.com/user-attachments/assets/8d0e24d8-7255-4a04-8e06-2f6bd3fc40bb" />
 
-    subgraph "Industrial Shim Layer"
-        SHIM1["CUDA Lobotomy<br/>(metaclass __new__ interception)"]
-        SHIM2["Adam → ClippedAdam<br/>(sys.modules redirection)"]
-        SHIM3["pickle → SafeTensors<br/>(artifact_sterilizer.py)"]
-        SHIM4["Weak Bayesian defaults → Industrial priors<br/>(particles=1 → 8, q_scale=0.004 → 0.01)"]
-    end
-
-    subgraph "Security Trilateral"
-        SEC1["🧹 Sterilize<br/>Pickle → SafeTensors"]
-        SEC2["✍️ Sign<br/>Cosign/Sigstore"]
-        SEC3["📋 Provenance<br/>Immutable JSON manifest"]
-    end
-
-    subgraph "Production Runtime"
-        PR1["🐳 Docker Container<br/>(non-root UID 1000)"]
-        PR2["☁️ GCP HPC<br/>(c2d-standard-32, AMD Milan)"]
-        PR3["📦 Artifact Registry<br/>(signed .safetensors + .sig + .cert + provenance.json)"]
-    end
-
-    RC1 --> SHIM1
-    RC2 --> SHIM2
-    RC3 --> SHIM3
-    SHIM1 --> PR1
-    SHIM2 --> PR1
-    SHIM3 --> PR2
-    SHIM4 --> PR2
-    PR2 --> SEC1
-    SEC1 --> SEC2
-    SEC2 --> SEC3
-    SEC3 --> PR3
-
-    style RC1 fill:#2d2d2d,stroke:#666,color:#ddd
-    style RC2 fill:#2d2d2d,stroke:#666,color:#ddd
-    style RC3 fill:#2d2d2d,stroke:#666,color:#ddd
-    style SHIM1 fill:#b8860b,stroke:#daa520,color:#fff
-    style SHIM2 fill:#b8860b,stroke:#daa520,color:#fff
-    style SHIM3 fill:#b8860b,stroke:#daa520,color:#fff
-    style SHIM4 fill:#b8860b,stroke:#daa520,color:#fff
-    style SEC1 fill:#8b0000,stroke:#ff0000,color:#fff
-    style SEC2 fill:#8b0000,stroke:#ff0000,color:#fff
-    style SEC3 fill:#8b0000,stroke:#ff0000,color:#fff
-    style PR1 fill:#006400,stroke:#00ff00,color:#fff
-    style PR2 fill:#006400,stroke:#00ff00,color:#fff
-    style PR3 fill:#006400,stroke:#00ff00,color:#fff
-```
 
 <br>
 
