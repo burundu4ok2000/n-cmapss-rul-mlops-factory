@@ -1,11 +1,13 @@
 <div align="center">
 
-# 🛡️ N-CMAPSS RUL MLOps Factory
+# Aircraft turbine Digital Twin: Predictive Maintenance in Real Time
 
 ### *Make Bayesian CNN Research Code Face the EU AI Act*
 
-From a researcher's GPU-locked Python script to an industrial-grade, EU AI Act-compliant
-MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down to the bit.
+safely training ML in GCP using Docker on HPC 32 core instance with full Logs observability. 
+Put it in a **real time telemetry** pipeline that **predicts RUL** (Remaining Useful Life) of the aircraft.
+
+BUT you are **not allowed** to edit a single line of the original researcher code.
 
 <br/>
 
@@ -36,17 +38,6 @@ MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down t
 ![GCP](https://img.shields.io/badge/GCP-Compute_Engine-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)
 ![Sigstore](https://img.shields.io/badge/Cosign-Keyless_Signing-000000?style=for-the-badge&logo=sigstore&logoColor=white)
 
-![pytest](https://img.shields.io/badge/pytest-244_tests-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
-![Coverage](https://img.shields.io/badge/coverage-82.51%25-brightgreen?style=flat-square)
-![Ruff](https://img.shields.io/badge/Ruff-Linting-D7FF64?style=flat-square&logo=ruff&logoColor=black)
-![mypy](https://img.shields.io/badge/mypy-Static_Typing-2A6DB5?style=flat-square&logo=python&logoColor=white)
-![Trivy](https://img.shields.io/badge/Trivy-Security_Scan-1904DA?style=flat-square&logo=trivy&logoColor=white)
-![pre-commit](https://img.shields.io/badge/pre--commit-CI_Gate-FAB040?style=flat-square&logo=precommit&logoColor=black)
-
-![ADRs](https://img.shields.io/badge/ADRs-10-blueviolet?style=flat-square)
-![Provenance](https://img.shields.io/badge/provenance-Keyless_Sigstore-black?style=flat-square)
-![License](https://img.shields.io/badge/license-Apache_2.0-green?style=flat-square)
-
 <br/>
 
 <b>
@@ -70,7 +61,7 @@ MLOps pipeline — deployed on 32-core HPC, signed with Sigstore, audited down t
 
 ---
 
-> **TL;DR:** A researcher wrote a Bayesian CNN for aircraft engine failure prediction. It works on his GPU. The company says *"deploy this in production, but make it EU AI Act compliant, CPU-only, fully auditable, and don't edit the original research code."* This repo is the answer.
+> *Legenda* Ok, company wants me to use their researcher code and build a **MLOps pipeline** from scratch. And train **ML** on **CPU** in **GCP**. But original code is written for **CUDA** and **local GPU's**. And there will be some **compliance audit** on it, so I need to implement **logs transparency**, add **Sigstore**, replace insecure .ckpt with **SafeTensors**. 
 
 ---
 
