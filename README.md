@@ -157,16 +157,26 @@ flowchart LR
 
 <br>
 
-## 🛡️ The Shim Layer In Detail
+## 🛡️ Now we're prepared
 
-The Adaptive Shim intercepts vendor code at **five surgical points**:
-
-| # | Interception Point | Method | Why |
+| # | Interception Point | File | Method | What Was Adapted |
 |---|---|---|---|
-| 1 | `torch.device("cuda:0")` | Metaclass `__new__` interception | Forces CPU-only: no CUDA runtime crashes on HPC |
-| 2 | `pl.Trainer(gpus=...)` | Monkeypatch `__init__` | Redirects `accelerator='cpu'`, strips GPU kwargs |
-| 3 | `ClippedAdam` → `Adam` | `sys.modules` redirection | Vendor wraps Adam; we unwrap for stability |
-| 4 | `get_proportion_lists(device=...)` | Function-level patch | Forces CPU uncertainty quantification, prevents device mismatch |
+| 1 | `torch.device("cuda:0")` | `patcher.py` | Metaclass `__new__` + `sys.modules` sweep | The research code is tightly coupled to CUDA. Shim intercepts the creation of device objects at the metaclass level: any call to `torch.device("cuda:X")` returns `cpu`. Additionally, iterates through ALL already loaded modules and replaces their local references with `torch.device`. Without this, a non-GPU HPC node crashes on the first call. |
+| 2 | `torch.cuda.is_available()` | `patcher.py` | Direct assignment `= lambda: False` | Even after replacing device, many libraries (Pyro, PyTorch Lightning) check `is_available()` before initialization. We force it to return `False` before any code has a chance to call the CUDA driver. |
+| 3 | `pl.Trainer(gpus=...)` | `patcher.py` | Monkeypatch `__init__` | Lightning tries to use the GPU by default. Shim intercepts the constructor: removes `gpus`, sets `accelerator='cpu'`, `devices=1`. Adds `StabilityCallback` - detects NaN/Inf in the loss and aborts training with `sys.exit(1)`, instead of silently generating broken checkpoints. |
+| 4 | `pyro.optim.ClippedAdam` → `Adam` | `patcher.py` | `sys.modules` redirection | The research code uses `pyro.optim.ClippedAdam`, a Bayesian wrapper over Adam. It is unstable on CPU with large batches. Shim replaces the module: when `ClippedAdam` is imported, the standard `torch.optim.Adam` is returned. |
+| 5 | `DataLoader(num_workers=0)` | `patcher.py` | Monkeypatch `__init__` | The research code creates a DataLoader with `num_workers=0` (single-threaded). Shim intercepts and sets `num_workers = cpu_count // 2` for parallel data loading on a 32-core HPC node. |
+| 6 | `vi.VI_BNN.__init__` — Bayesian defaults | `patcher.py` | Monkeypatch `__init__` | Research defaults are weak: `num_particles=1` (one particle is essentially a regular neural network), `q_scale=0.004` (prior is too narrow). Shim forces: `num_particles=8`, `q_scale=0.01`, `prior=0.2`. Adds Leaky ReLU to protect against dying neurons in deep Bayesian layers. LR is capped at `0.0002` for CPU safety. |
+| 7 | `NCMAPSSDataModule.__init__` — paths | `patcher.py` | Monkeypatch `__init__` | Research code reads data from hardcoded local paths. Shim redirects to a factory-controlled sandbox (`processed/lmdb`), synchronized with GCS. |
+| 8 | `VIBnnWrapper.__init__` — batch size | `patcher.py` | Monkeypatch `__init__` | Research `batch_size=10000` causes an OOM on the CPU. Shim implements "Steel Guardian": a dynamic cap of 2560 samples, regardless of the config value. |
+| 9 | `VIBnnWrapper.training_step` — NaN guard | `patcher.py` | Monkeypatch methods | After each training step, Shim checks `mse/train` in callback metrics. If NaN, it crashes and preserves forensic telemetry. |
+| 10 | `compute_scalers` → parallel | `patcher.py` | Complete function replacement | Research code calculates the Z-score in a single thread: sequential scan of 10 HDF5 files → ~40 minutes. Shim replaces `ProcessPoolExecutor`: parallel scattering across all cores → ~2 minutes. |
+| 11 | `generate_parquet` → parallel | `patcher.py` | Complete function replacement | Same story: Parquet shard generation is done via `ProcessPoolExecutor` instead of a single-threaded loop. |
+| 12 | `generate_lmdb` → factory version | `patcher.py` | Complete function replacement | The research LMDB generator does not support unit-based splitting. Shim uses its own implementation with `RobustMinMaxAggregate`, protection against empty shards, and physical isolation of engine units. |
+| 13 | `get_proportion_lists(device=...)` | `patcher.py` | Function-level patch | The research implementation of uncertainty quantification calls `y_true.device`, which can be `meta` or `None` on a CPU node. Shim forces `device='cpu'` and creates tensors on the CPU. |
+| 14 | `argparse` paths | `patcher.py` | `parse_args` mock injection | The research CLI accepts `--data-path`, `--out-path`, etc. Shim intercepts `parse_args()` and replaces all paths with a factory-controlled sandbox: `raw_data/`, `processed/`, `results/`. |
+
+---
 
 <br>
 
